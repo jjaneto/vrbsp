@@ -123,6 +123,33 @@ vrbsp/fast:
 	$(MAKE) -f CMakeFiles/vrbsp.dir/build.make CMakeFiles/vrbsp.dir/build
 .PHONY : vrbsp/fast
 
+Model.o: Model.cpp.o
+
+.PHONY : Model.o
+
+# target to build an object file
+Model.cpp.o:
+	$(MAKE) -f CMakeFiles/vrbsp.dir/build.make CMakeFiles/vrbsp.dir/Model.cpp.o
+.PHONY : Model.cpp.o
+
+Model.i: Model.cpp.i
+
+.PHONY : Model.i
+
+# target to preprocess a source file
+Model.cpp.i:
+	$(MAKE) -f CMakeFiles/vrbsp.dir/build.make CMakeFiles/vrbsp.dir/Model.cpp.i
+.PHONY : Model.cpp.i
+
+Model.s: Model.cpp.s
+
+.PHONY : Model.s
+
+# target to generate assembly for a file
+Model.cpp.s:
+	$(MAKE) -f CMakeFiles/vrbsp.dir/build.make CMakeFiles/vrbsp.dir/Model.cpp.s
+.PHONY : Model.cpp.s
+
 code_c++.o: code_c++.cpp.o
 
 .PHONY : code_c++.o
@@ -159,6 +186,9 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
 	@echo "... vrbsp"
+	@echo "... Model.o"
+	@echo "... Model.i"
+	@echo "... Model.s"
 	@echo "... code_c++.o"
 	@echo "... code_c++.i"
 	@echo "... code_c++.s"
