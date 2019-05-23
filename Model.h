@@ -18,15 +18,27 @@
 #include <map>
 #include <deque>
 #include <iomanip>
+#include <vector>
 
 #elif
 #include <bits/stdc++.h>
 #endif
 
 #include "gurobi_c++.h"
+#include "Structures.h"
 
 class Model {
 public:
+
+    enum type {
+        nonlinear,
+        linearBIGM,
+        linear
+    };
+
+    Model(char file[]);
+
+    ~Model();
 
     GRBEnv *env;
     GRBModel *model;
@@ -36,7 +48,20 @@ public:
 
     int nDecisionVariables;
     int nConstraints;
+    int nConnections;
+    int nChannels, nChannels20MHz, nChannels40MHz, nChannels80MHz, nChannels160MHz;
+
+    std::vector<std::vector<double>> interferenceMatrix;
+    std::vector<std::vector<double>> distanceMatrix;
+    std::vector<Coordenate> sendersCoord, recCoord;
+
+    double dataRates[10][4], SINR[10][4];
+
+    double time, alfa, noise, powerSender;
 
     void defineObjectiveFunction();
+
     void defineConstraints();
+
+    void generateInterferenceDistanceMatrix();
 };

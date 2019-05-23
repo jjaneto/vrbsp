@@ -19,7 +19,7 @@ set(GUROBI_LIB_DIRECTORY "/Library/gurobi752/mac64/lib/")
 link_directories(${GUROBI_LIB_DIRECTORY})
 
 # criar executavel
-set(SOURCE_FILES code_c++.cpp ${GUROBI_INCLUDE_DIRECTORY}/gurobi_c++.h Model.h Model.cpp)
+set(SOURCE_FILES code_c++.cpp ${GUROBI_INCLUDE_DIRECTORY}/gurobi_c++.h Model.h Model.cpp Structures.h)
 add_executable(vrbsp ${SOURCE_FILES})
 
 # adicionar libraries
