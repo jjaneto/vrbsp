@@ -5,8 +5,6 @@
 #ifndef VRBSP_STRUCTURES_H
 #define VRBSP_STRUCTURES_H
 
-#endif //VRBSP_STRUCTURES_H
-
 //TODO: Make a constructor that is padronized for each structure.
 
 typedef struct Coordenate {
@@ -51,3 +49,5 @@ struct Spectrum {
     int usedSpectrum;
     std::vector<Channel> listChannels;
 };
+
+#endif //VRBSP_STRUCTURES_H
