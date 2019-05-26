@@ -40,7 +40,7 @@ public:
 
     GRBEnv *env;
     GRBModel *model;
-    GRBVar **vars;
+    GRBVar **vars; //TODO: refactor this variable
     GRBLinExpr objectiveFunction;
     std::vector<GRBLinExpr *> constraints;
 
@@ -48,6 +48,8 @@ public:
     int nConstraints;
     int nConnections;
     int nChannels, nChannels20MHz, nChannels40MHz, nChannels80MHz, nChannels160MHz;
+
+    type _type;
 
     std::vector<std::vector<double>> interferenceMatrix;
     std::vector<std::vector<double>> distanceMatrix;
@@ -64,7 +66,34 @@ public:
 
     void generateInterferenceDistanceMatrix();
 
-    void createVariables();
+    void createDecisionVariables();
+
+    void defineConstraintOne();
+
+    void defineConstraintTwo();
+
+    void defineConstraintThree();
+
+    void defineConstraintFour();
+
+    void defineConstraintFive();
+
+    void defineConstraintSix();
+
+    void defineConstraintSeven();
+
+    void defineConstraintEight();
+
+    void defineConstraintNine();
+
+    void defineConstraintTen();
+
+    void defineConstraintEleven();
+
+    void defineConstraintTwelve();
+
+    void defineConstraintThirteen();
+
 };
 
 #endif //VRBSP_MODEL_H

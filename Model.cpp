@@ -4,15 +4,7 @@
 
 #include "Model.h"
 
-void Model::defineConstraints() {
-
-}
-
-void Model::defineObjectiveFunction() {
-
-}
-
-Model::Model(char *file) {
+Model::Model(char *file, type formulation) {
   FILE *file1 = fopen(file, "r");
 
   if (file1 == nullptr) {
@@ -69,6 +61,14 @@ Model::Model(char *file) {
   generateInterferenceDistanceMatrix();
 
   //initBig_Mij();
+
+
+  createDecisionVariables();
+  defineObjectiveFunction();
+  defineConstraints();
+}
+
+Model::~Model() {
 
 }
 
@@ -157,6 +157,76 @@ void Model::generateInterferenceDistanceMatrix() {
   //TODO: Why is this necessary? Or, actually, is this necessary?
   //recCoord.clear();
   //sendersCoord.clear();
+}
+
+void Model::createDecisionVariables() {
+
+}
+
+void Model::defineConstraintOne() {
+  
+}
+
+void Model::defineConstraintTwo() {
+
+}
+
+void Model::defineConstraintThree() {
+
+}
+
+void Model::defineConstraintFour() {
+
+}
+
+void Model::defineConstraintFive() {
+
+}
+
+void Model::defineConstraintSix() {
+
+}
+
+void Model::defineConstraintSeven() {
+
+}
+
+void Model::defineConstraintEight() {
+
+}
+
+void Model::defineConstraintNine() {
+
+}
+
+void Model::defineConstraintTen() {
+
+}
+
+void Model::defineConstraintEleven() {
+
+}
+
+void Model::defineConstraintTwelve() {
+
+}
+
+void Model::defineConstraintThirteen() {
+
+}
+
+void Model::defineConstraints() {
+  if (_type == nonlinear) {
+
+  } else if (_type == linear) {
+
+  } else {
+
+  }
+}
+
+void Model::defineObjectiveFunction() {
+
 }
 
 
