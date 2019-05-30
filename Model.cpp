@@ -18,7 +18,8 @@ Model::Model(char *file, type formulation) {
 
   double aux1;
   fscanf(file1, "%lf", &aux1);
-  fscanf(file1, "%d %lf %lf %lf %lf %lf %lf %lf %lf", &nConnections, &time, &alfa, &noise, &powerSender, &aux1, &aux1, &aux1, &aux1);
+  fscanf(file1, "%d %lf %lf %lf %lf %lf %lf %lf %lf", &nConnections, &time, &alfa, &noise, &powerSender, &aux1, &aux1,
+         &aux1, &aux1);
 
   /*  //TODO: Check why this is necessary
   if (noise != 0) {
@@ -63,6 +64,8 @@ Model::Model(char *file, type formulation) {
   //initBig_Mij();
 
 
+  env = new GRBEnv();
+  model = new GRBModel(*env);
   createDecisionVariables();
   defineObjectiveFunction();
   defineConstraints();
@@ -161,13 +164,81 @@ void Model::generateInterferenceDistanceMatrix() {
 
 void Model::createDecisionVariables() {
 
+  //variavel x
+  for (int i = 0; i < nConnections; i++) {
+    //
+    for (int j = 0; j < nConnections; j++) {
+      //
+      for (int c = 0; c < nChannels; c++) {
+        std::string name = "var_X" + std::to_string(i) + "-" + std::to_string(j) + "-" + std::to_string(c);
+        x[i][j][c] = model->addVar(0.0, 1.0, 0.0, GRB_INTEGER, name);
+      }
+    }
+  }
+
+  //variavel y
+  for (int i = 0; i < nConnections; i++) {
+
+    for (int j = 0; j < nConnections; j++) {
+
+      for (int b = 0; b < 4; b++) {
+
+        for (int d = 0; d < 10; d++) {
+
+          y[i][j][b][d] = model->addVar(0.0, 1.0, 0.0, GRB_INTEGER, ""); //TODO: Put the right name
+
+        }
+      }
+    }
+  }
+
+  //variavel z
+  for (int i = 0; i < nConnections; i++) {
+
+    for (int j = 0; j < nConnections; j++) {
+
+      for (int c = 0; c < nChannels; c++) {
+
+        z[i][j][c] = model->addVar(0.0, 1.0, 0.0, GRB_INTEGER, ""); //TODO: Put the right name
+      }
+    }
+  }
+
+  //variavel I_{ij}
+
+
+  //Variavel I_{ij}^{c}
+
+
+
 }
 
 void Model::defineConstraintOne() {
-  
+
+  for (int i = 0; i < nConnections; i++) {
+    for (int j = 0; j < nConnections; j++) {
+      if (i != j) {
+        GRBLinExpr expr1, expr2;
+
+        //TODO: Implement Here.
+
+        model->addConstr(expr1 + expr2 <= 1.0);
+      }
+    }
+  }
 }
 
 void Model::defineConstraintTwo() {
+
+  for (int b = 0; b < 4; b++) { //TODO: Instead of fixing b at 4, try to make it variable, as an extension of the model.
+
+    for (int i = 0; i < nConnections; i++) {
+
+      for (int s = 0; s < nDataRates; s++) {
+
+      }
+    }
+  }
 
 }
 

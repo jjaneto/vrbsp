@@ -38,16 +38,18 @@ public:
 
     ~Model();
 
-    GRBEnv *env;
-    GRBModel *model;
-    GRBVar **vars; //TODO: refactor this variable
-    GRBLinExpr objectiveFunction;
-    std::vector<GRBLinExpr *> constraints;
-
     int nDecisionVariables;
     int nConstraints;
     int nConnections;
+    int nDataRates;
     int nChannels, nChannels20MHz, nChannels40MHz, nChannels80MHz, nChannels160MHz;
+
+    GRBEnv *env;
+    GRBModel *model;
+    GRBVar **vars; //TODO: refactor this variable
+    GRBVar x[250][250][50], y[250][250][4][10], z[250][250][45], I, IC;
+    GRBLinExpr objectiveFunction;
+    std::vector<GRBLinExpr *> constraints;
 
     type _type;
 
