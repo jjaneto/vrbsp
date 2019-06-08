@@ -299,10 +299,6 @@ void Model::defineConstraintTwo() {
 
 void Model::defineConstraintThree() {
 
-}
-
-void Model::defineConstraintFour() {
-
   for (int i = 0; i < nConnections; i++) {
 
     for (int j = 0; j < nConnections; j++) {
@@ -317,6 +313,20 @@ void Model::defineConstraintFour() {
 
         }
         model->addConstr(expr == z[i][j][c1]);
+      }
+    }
+  }
+
+}
+
+void Model::defineConstraintFour() {
+
+  for (int i = 0; i < nConnections; i++) {
+
+    for (int j = 0; j < nConnections; j++) {
+
+      for (int c = 0; c < nChannels; c++) {
+
       }
     }
   }
@@ -413,7 +423,23 @@ void Model::defineConstraints() {
 }
 
 void Model::defineObjectiveFunction() {
+  GRBLinExpr function;
 
+  for (int i = 0; i < nConnections; i++) {
+
+    for (int j = 0; j < nConnections; j++) {
+
+      for (int b = 0; b < nChannels; b++) {
+
+        for (int s = 0; s < nDataRates; s++) {
+
+          function += ((i == j) ? dataRates[s][b] * y[i][j][b][s] : 0); //TODO: Check whether if it is [s][b] or [b][s]
+        }
+      }
+    }
+  }
+
+  model->setObjective(function, GRB_MAXIMIZE);
 }
 
 
