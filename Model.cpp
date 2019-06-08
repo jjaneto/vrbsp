@@ -215,12 +215,28 @@ void Model::createDecisionVariables() {
 
 void Model::defineConstraintOne() {
 
-  for (int i = 0; i < nConnections; i++) {
+  /*for (int i = 0; i < nConnections; i++) {
     for (int j = 0; j < nConnections; j++) {
       if (i != j) {
         GRBLinExpr expr1, expr2;
 
         //TODO: Implement Here.
+
+        model->addConstr(expr1 + expr2 <= 1.0);
+      }
+    }
+  }*/
+
+  for (int i = 0; i < nConnections; i++) {
+
+    for (int j = 0; j < nConnections; j++) {
+
+      for (int c = 0; c < nChannels; c++) {
+
+        GRBLinExpr expr1, expr2;
+
+        expr1 = x[i][j][c];
+        expr2 = x[j][i][c];
 
         model->addConstr(expr1 + expr2 <= 1.0);
       }
@@ -232,10 +248,49 @@ void Model::defineConstraintTwo() {
 
   for (int b = 0; b < 4; b++) { //TODO: Instead of fixing b at 4, try to make it variable, as an extension of the model.
 
+    if (b == 0) {
+      nDataRates = 9;
+    } else {
+      nDataRates = 10;
+    }
+
     for (int i = 0; i < nConnections; i++) {
 
-      for (int s = 0; s < nDataRates; s++) {
+      for (int j = 0; j < nConnections; j++) {
+//        if (i == j)
+//          continue;
 
+        GRBLinExpr expr1, expr2;
+
+        for (int s = 0; s < nDataRates; s++) {
+          expr1 += y[i][j][b][s];
+        }
+
+        switch(b) {
+          case 0:
+            for (int c = 0; c < nDataRates; c++)
+              expr2 += x[i][j][channels20MHz[c]];
+
+            break;
+          case 1:
+            for (int c = 0; c < nDataRates; c++)
+              expr2 += x[i][j][channels40MHz[c]];
+
+            break;
+          case 2:
+            for (int c = 0; c < nDataRates; c++)
+              expr2 += x[i][j][channels80MHz[c]];
+
+            break;
+          case 3:
+            for (int c = 0; c < nDataRates; c++)
+              expr2 += x[i][j][channels160MHz[c]];
+
+            break;
+        }
+
+
+        model->addConstr(expr1 <= expr2);
       }
     }
   }
@@ -248,18 +303,79 @@ void Model::defineConstraintThree() {
 
 void Model::defineConstraintFour() {
 
+  for (int i = 0; i < nConnections; i++) {
+
+    for (int j = 0; j < nConnections; j++) {
+
+      for (int c1 = 0; c1 < nChannels; c1++) {
+        GRBLinExpr expr;
+        for (int c2 = 0; c2 < nChannels; c2++) {
+
+          if (overlap[c1][c2]) {
+            expr += x[i][j][c1];
+          }
+
+        }
+        model->addConstr(expr == z[i][j][c1]);
+      }
+    }
+  }
+
 }
 
 void Model::defineConstraintFive() {
+
+  for (int i = 0; i < nConnections; i++) {
+    for (int j = 0; j < nConnections; j++) {
+
+      for (int c = 0; c < nChannels; c++) {
+        GRBLinExpr expr;
+
+        expr = IC[i][j][c] - M_ij[i] * (1 - x[i][j][c]);
+
+        model->addConstr(I[i][j] >= expr);
+      }
+    }
+  }
 
 }
 
 void Model::defineConstraintSix() {
 
+  for (int i = 0; i < nConnections; i++) {
+    for (int j = 0; j < nConnections; j++) {
+
+      for (int c = 0; c < nChannels; c++) {
+        GRBLinExpr expr;
+
+        expr = IC[i][j][c] + M_ij[i] * (1 - x[i][j][c]);
+
+        model->addConstr(I[i][j] <= expr);
+      }
+    }
+  }
 }
 
 void Model::defineConstraintSeven() {
+  for (int i = 0; i < nConnections; i++) {
+    for (int j = 0; j < nConnections; j++) {
+      GRBLinExpr expr;
 
+      for (int b = 0; b < 4; b++) {
+
+        if (b == 0) {
+          nDataRates = 9;
+        } else {
+          nDataRates = 10;
+        }
+
+        for (int s = 0; s < nDataRates; s++) {
+
+          expr += ((connections[i].powerSR / SINR[s][b]) - noise) * y[i][j][b][s];
+        }
+      }
+    }
+  }
 }
 
 void Model::defineConstraintEight() {
