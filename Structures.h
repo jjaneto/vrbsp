@@ -10,13 +10,13 @@
 typedef struct Coordenate {
     double x, y;
 
-    Coordenate(Coordenate &aux) : x(aux.x), y(aux.y) {}
+    Coordenate(const Coordenate &aux) : x(aux.x), y(aux.y) {}
 
     Coordenate(double x, double y) : x(x), y(y) {}
 
     Coordenate() {}
 
-};
+}Coordenate;
 
 struct Connection {
     int id;

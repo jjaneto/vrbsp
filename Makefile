@@ -150,32 +150,32 @@ Model.cpp.s:
 	$(MAKE) -f CMakeFiles/vrbsp.dir/build.make CMakeFiles/vrbsp.dir/Model.cpp.s
 .PHONY : Model.cpp.s
 
-code_c++.o: code_c++.cpp.o
+main.o: main.cpp.o
 
-.PHONY : code_c++.o
+.PHONY : main.o
 
 # target to build an object file
-code_c++.cpp.o:
-	$(MAKE) -f CMakeFiles/vrbsp.dir/build.make CMakeFiles/vrbsp.dir/code_c++.cpp.o
-.PHONY : code_c++.cpp.o
+main.cpp.o:
+	$(MAKE) -f CMakeFiles/vrbsp.dir/build.make CMakeFiles/vrbsp.dir/main.cpp.o
+.PHONY : main.cpp.o
 
-code_c++.i: code_c++.cpp.i
+main.i: main.cpp.i
 
-.PHONY : code_c++.i
+.PHONY : main.i
 
 # target to preprocess a source file
-code_c++.cpp.i:
-	$(MAKE) -f CMakeFiles/vrbsp.dir/build.make CMakeFiles/vrbsp.dir/code_c++.cpp.i
-.PHONY : code_c++.cpp.i
+main.cpp.i:
+	$(MAKE) -f CMakeFiles/vrbsp.dir/build.make CMakeFiles/vrbsp.dir/main.cpp.i
+.PHONY : main.cpp.i
 
-code_c++.s: code_c++.cpp.s
+main.s: main.cpp.s
 
-.PHONY : code_c++.s
+.PHONY : main.s
 
 # target to generate assembly for a file
-code_c++.cpp.s:
-	$(MAKE) -f CMakeFiles/vrbsp.dir/build.make CMakeFiles/vrbsp.dir/code_c++.cpp.s
-.PHONY : code_c++.cpp.s
+main.cpp.s:
+	$(MAKE) -f CMakeFiles/vrbsp.dir/build.make CMakeFiles/vrbsp.dir/main.cpp.s
+.PHONY : main.cpp.s
 
 # Help Target
 help:
@@ -189,9 +189,9 @@ help:
 	@echo "... Model.o"
 	@echo "... Model.i"
 	@echo "... Model.s"
-	@echo "... code_c++.o"
-	@echo "... code_c++.i"
-	@echo "... code_c++.s"
+	@echo "... main.o"
+	@echo "... main.i"
+	@echo "... main.s"
 .PHONY : help
 
 

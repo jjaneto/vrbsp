@@ -48,14 +48,14 @@ Model::Model(char *file, type formulation) {
 
   for (int i = 0; i < nConnections; i++) {
     Coordenate coord;
-    fprintf(file1, "%lf %lf", &coord.x, &coord.y);
+    fprintf(file1, "%lf %lf", coord.x, coord.y);
 
     recCoord.emplace_back(coord);
   }
 
   for (int i = 0; i < nConnections; i++) {
     Coordenate coord;
-    fprintf(file1, "%lf %lf", &coord.x, &coord.y);
+    fprintf(file1, "%lf %lf", coord.x, coord.y);
 
     sendersCoord.emplace_back(coord);
   }
