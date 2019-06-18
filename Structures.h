@@ -19,6 +19,20 @@ typedef struct Coordenate {
 }Coordenate;
 
 struct Connection {
+
+    Connection() {
+      id = 0;
+      bandwidth = 0;
+      frequency = 0;
+      idDataRate = 0;
+      powerSR = 0.0;
+      valureSINR = 0.0;
+      distanceSenderReceptor = 0.0;
+      totalInterference = 0.0;
+      active = true;
+
+    }
+
     int id;
     int bandwidth;
     int frequency;

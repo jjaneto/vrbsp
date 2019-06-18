@@ -5,9 +5,9 @@
 #include "Model.h"
 
 Model::Model(char *file, type formulation) {
-  FILE *file1 = fopen(file, "r");
+  FILE *file_ = fopen(file, "r");
 
-  if (file1 == nullptr) {
+  if (file_ == nullptr) {
     fprintf(stderr, "Error opening file");
     exit(1);
   }
@@ -18,8 +18,8 @@ Model::Model(char *file, type formulation) {
   //TODO: change the dummy variables to its respective correct names
 
   double aux1;
-  fscanf(file1, "%lf", &aux1);
-  fscanf(file1, "%d %lf %lf %lf %lf %lf %lf %lf %lf", &nConnections, &time, &alfa, &noise, &powerSender, &aux1, &aux1,
+  fscanf(file_, "%lf", &aux1);
+  fscanf(file_, "%d %lf %lf %lf %lf %lf %lf %lf %lf", &nConnections, &time, &alfa, &noise, &powerSender, &aux1, &aux1,
          &aux1, &aux1);
 
   /*  //TODO: Check why this is necessary
@@ -33,13 +33,13 @@ Model::Model(char *file, type formulation) {
 
   for (int i = 0; i < 10; i++) {
     for (int j = 0; j < 4; j++) {
-      fscanf(file1, "%lf", &dataRates[i][j]);
+      fscanf(file_, "%lf", &dataRates[i][j]);
     }
   }
 
   for (int i = 0; i < 10; i++) {
     for (int j = 0; j < 4; j++) {
-      fscanf(file1, "%lf", &SINR[i][j]);
+      fscanf(file_, "%lf", &SINR[i][j]);
     }
   }
 
@@ -48,34 +48,38 @@ Model::Model(char *file, type formulation) {
 
   for (int i = 0; i < nConnections; i++) {
     Coordenate coord;
-    fprintf(file1, "%lf %lf", coord.x, coord.y);
+    fscanf(file_, "%lf %lf", &coord.x, &coord.y);
 
     recCoord.emplace_back(coord);
   }
 
   for (int i = 0; i < nConnections; i++) {
     Coordenate coord;
-    fprintf(file1, "%lf %lf", coord.x, coord.y);
+    fscanf(file_, "%lf %lf", &coord.x, &coord.y);
 
     sendersCoord.emplace_back(coord);
   }
 
+  interferenceMatrix.assign(nConnections, std::vector<double>(nConnections, 0));
+  distanceMatrix.assign(nConnections, std::vector<double>(nConnections, 0));
+
   generateInterferenceDistanceMatrix();
-
-  //initBig_Mij();
-
+//
+  createBigM();
+//
   env = new GRBEnv();
   model = new GRBModel(*env);
+//  model->set(GRB_IntParam_Presolve, 0);
   createDecisionVariables();
-  defineObjectiveFunction();
   defineConstraints();
+  defineObjectiveFunction();
 }
 
 Model::~Model() {
 
 }
 
-void Model::generateInterferenceDistanceMatrix() {
+void Model::generateInterferenceDistanceMatrix() { //TODO: Double check this function in order to remove erros
 
   Connection auxConnection;
   Interference auxInterference;
@@ -173,7 +177,7 @@ void Model::createDecisionVariables() {
       for (int c = 0; c < nChannels; c++) {
 
         sprintf(varName, "var_X:[%d][%d][%d]", i, j, c);
-        x[i][j][c] = model->addVar(0.0, 1.0, 0.0, GRB_INTEGER, varName);
+        x[i][j][c] = model->addVar(0.0, 1.0, 0.0, GRB_BINARY, varName);
       }
     }
   }
@@ -188,7 +192,7 @@ void Model::createDecisionVariables() {
         for (int d = 0; d < 10; d++) {
 
           sprintf(varName, "var_Y:[%d][%d][%d][%d]", i, j, b, d);
-          y[i][j][b][d] = model->addVar(0.0, 1.0, 0.0, GRB_INTEGER, varName);
+          y[i][j][b][d] = model->addVar(0.0, 1.0, 0.0, GRB_BINARY, varName);
         }
       }
     }
@@ -202,7 +206,7 @@ void Model::createDecisionVariables() {
       for (int c = 0; c < nChannels; c++) {
 
         sprintf(varName, "var_Z:[%d][%d][%d]", i, j, c);
-        z[i][j][c] = model->addVar(0.0, 1.0, 0.0, GRB_INTEGER, varName);
+        z[i][j][c] = model->addVar(0.0, 1.0, 0.0, GRB_BINARY, varName);
       }
     }
   }
@@ -212,7 +216,7 @@ void Model::createDecisionVariables() {
     for (int j = 0; j < nConnections; j++) {
 
       sprintf(varName, "var_I:[%d][%d]", i, j);
-      I[i][j] = model->addVar(0.0, 1.0, 0.0, GRB_INTEGER, varName);
+      I[i][j] = model->addVar(0.0, 1.0, 0.0, GRB_BINARY, varName);
     }
   }
 
@@ -224,7 +228,7 @@ void Model::createDecisionVariables() {
       for (int c = 0; c < nChannels; c++) {
 
         sprintf(varName, "var_IC:[%d][%d][%d]", i, j, c);
-        IC[i][j][c] = model->addVar(0.0, 1.0, 0.0, GRB_INTEGER, varName);
+        IC[i][j][c] = model->addVar(0.0, 1.0, 0.0, GRB_BINARY, varName);
       }
     }
   }
@@ -285,7 +289,7 @@ void Model::defineConstraintTwo() {
           expr1 += y[i][j][b][s];
         }
 
-        switch(b) {
+        switch (b) {
           case 0:
             for (int c = 0; c < nDataRates; c++)
               expr2 += x[i][j][channels20MHz[c]];
@@ -389,18 +393,48 @@ void Model::defineConstraintSeven() {
           expr += ((connections[i].powerSR / SINR[s][b]) - noise) * y[i][j][b][s];
         }
       }
+
+      model->addConstr(expr >= I[i][j]);
     }
   }
 }
 
+//TODO: Resolve for M_ij[]
 void Model::defineConstraints() {
   if (_type == nonlinear) {
 
   } else if (_type == linear) {
-
+    defineConstraintOne();
+    defineConstraintTwo();
+    defineConstraintThree();
+    defineConstraintFive();
+    defineConstraintSix();
+    defineConstraintSeven();
   } else {
 
   }
+}
+
+
+void Model::createBigM() {
+
+  for (int c = 0; c < nConnections; c++) {
+    double value = computeInterference(c);
+    M_ij.emplace_back(value);
+  }
+}
+
+inline double Model::computeInterference(double c) {
+  double ret = 0.0;
+
+  for (int i = 0; i < nConnections; i++) {
+
+    if (c != i) {
+      ret += interferenceMatrix[c][i];
+    }
+  }
+
+  return ret;
 }
 
 void Model::defineObjectiveFunction() {
@@ -410,9 +444,9 @@ void Model::defineObjectiveFunction() {
 
     for (int j = 0; j < nConnections; j++) {
 
-      for (int b = 0; b < nChannels; b++) {
+      for (int b = 0; b < 4; b++) {
 
-        for (int s = 0; s < nDataRates; s++) {
+        for (int s = 0; s < 10; s++) {
 
           function += ((i == j) ? dataRates[s][b] * y[i][j][b][s] : 0); //TODO: Check whether if it is [s][b] or [b][s]
         }
@@ -427,12 +461,9 @@ void Model::solve() {
   model->optimize();
 }
 
-
-
-
-
-
-
+int Model::getStatus() {
+  return model->get(GRB_IntAttr_Status);
+}
 
 
 

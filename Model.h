@@ -122,6 +122,10 @@ public:
 
     void createDecisionVariables();
 
+    void createBigM();
+
+    inline double computeInterference(double c);
+
     void defineConstraintOne();
 
     void defineConstraintTwo();
@@ -147,6 +151,8 @@ public:
     void defineConstraintTwelve();
 
     void defineConstraintThirteen();
+
+    int getStatus();
 
     void solve();
 
