@@ -235,31 +235,21 @@ void Model::createDecisionVariables() {
 
 void Model::defineConstraintOne() {
 
-  /*for (int i = 0; i < nConnections; i++) {
-    for (int j = 0; j < nConnections; j++) {
-      if (i != j) {
-        GRBLinExpr expr1, expr2;
-
-        //TODO: Implement Here.
-
-        model->addConstr(expr1 + expr2 <= 1.0);
-      }
-    }
-  }*/
-
   for (int i = 0; i < nConnections; i++) {
 
     for (int j = 0; j < nConnections; j++) {
 
+      GRBLinExpr expr1, expr2;
+
       for (int c = 0; c < nChannels; c++) {
-
-        GRBLinExpr expr1, expr2;
-
-        expr1 = x[i][j][c];
-        expr2 = x[j][i][c];
-
-        model->addConstr(expr1 + expr2 <= 1.0);
+        expr1 += x[i][j][c];
       }
+
+      for (int c = 0; c < nChannels; c++) {
+        expr2 += x[j][i][c];
+      }
+
+      model->addConstr(expr1 + expr2 <= 1);
     }
   }
 }
