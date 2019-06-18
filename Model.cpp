@@ -28,9 +28,6 @@ Model::Model(char *file, type formulation) {
   }
    */
 
-  //interferenceMatrix.assign();
-  //distanceMatrix.assing();
-
   for (int i = 0; i < 10; i++) {
     for (int j = 0; j < 4; j++) {
       fscanf(file_, "%lf", &dataRates[i][j]);
@@ -206,7 +203,7 @@ void Model::createDecisionVariables() {
       for (int c = 0; c < nChannels; c++) {
 
         sprintf(varName, "var_Z:[%d][%d][%d]", i, j, c);
-        z[i][j][c] = model->addVar(0.0, 1.0, 0.0, GRB_BINARY, varName);
+        z[i][j][c] = model->addVar(0.0, GRB_INFINITY, 0.0, GRB_INTEGER, varName);
       }
     }
   }
@@ -216,7 +213,7 @@ void Model::createDecisionVariables() {
     for (int j = 0; j < nConnections; j++) {
 
       sprintf(varName, "var_I:[%d][%d]", i, j);
-      I[i][j] = model->addVar(0.0, 1.0, 0.0, GRB_BINARY, varName);
+      I[i][j] = model->addVar(0.0, GRB_INFINITY, 0.0, GRB_CONTINUOUS, varName);
     }
   }
 
@@ -228,7 +225,7 @@ void Model::createDecisionVariables() {
       for (int c = 0; c < nChannels; c++) {
 
         sprintf(varName, "var_IC:[%d][%d][%d]", i, j, c);
-        IC[i][j][c] = model->addVar(0.0, 1.0, 0.0, GRB_BINARY, varName);
+        IC[i][j][c] = model->addVar(0.0, GRB_INFINITY, 0.0, GRB_CONTINUOUS, varName);
       }
     }
   }

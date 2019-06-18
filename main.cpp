@@ -15,7 +15,7 @@ int main() {
   model = new Model(file, Model::type::linear);
 
 //  start = std::chrono::system_clock::now();
-//  model->solve();
+  model->solve();
 //  end = std::chrono::system_clock::now();
 
   int status = model->getStatus();
