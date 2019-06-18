@@ -164,14 +164,16 @@ void Model::generateInterferenceDistanceMatrix() {
 
 void Model::createDecisionVariables() {
 
+  char varName[50];
   //variavel x
   for (int i = 0; i < nConnections; i++) {
     //
     for (int j = 0; j < nConnections; j++) {
       //
       for (int c = 0; c < nChannels; c++) {
-        std::string name = "var_X" + std::to_string(i) + "-" + std::to_string(j) + "-" + std::to_string(c);
-        x[i][j][c] = model->addVar(0.0, 1.0, 0.0, GRB_INTEGER, name);
+
+        sprintf(varName, "var_X:[%d][%d][%d]", i, j, c);
+        x[i][j][c] = model->addVar(0.0, 1.0, 0.0, GRB_INTEGER, varName);
       }
     }
   }
@@ -185,8 +187,8 @@ void Model::createDecisionVariables() {
 
         for (int d = 0; d < 10; d++) {
 
-          y[i][j][b][d] = model->addVar(0.0, 1.0, 0.0, GRB_INTEGER, ""); //TODO: Put the right name
-
+          sprintf(varName, "var_Y:[%d][%d][%d][%d]", i, j, b, d);
+          y[i][j][b][d] = model->addVar(0.0, 1.0, 0.0, GRB_INTEGER, varName);
         }
       }
     }
@@ -199,7 +201,8 @@ void Model::createDecisionVariables() {
 
       for (int c = 0; c < nChannels; c++) {
 
-        z[i][j][c] = model->addVar(0.0, 1.0, 0.0, GRB_INTEGER, ""); //TODO: Put the right name
+        sprintf(varName, "var_Z:[%d][%d][%d]", i, j, c);
+        z[i][j][c] = model->addVar(0.0, 1.0, 0.0, GRB_INTEGER, varName);
       }
     }
   }
@@ -208,7 +211,8 @@ void Model::createDecisionVariables() {
   for (int i = 0; i < nConnections; i++) {
     for (int j = 0; j < nConnections; j++) {
 
-      I[i][j] = model->addVar(0.0, 1.0, 0.0, GRB_INTEGER, ""); //TODO: Put the right name
+      sprintf(varName, "var_I:[%d][%d]", i, j);
+      I[i][j] = model->addVar(0.0, 1.0, 0.0, GRB_INTEGER, varName);
     }
   }
 
@@ -219,7 +223,8 @@ void Model::createDecisionVariables() {
 
       for (int c = 0; c < nChannels; c++) {
 
-        IC[i][j][c] = model->addVar(0.0, 1.0, 0.0, GRB_INTEGER, ""); //TODO: Put the right name
+        sprintf(varName, "var_IC:[%d][%d][%d]", i, j, c);
+        IC[i][j][c] = model->addVar(0.0, 1.0, 0.0, GRB_INTEGER, varName);
       }
     }
   }
