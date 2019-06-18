@@ -333,20 +333,6 @@ void Model::defineConstraintThree() {
 
 }
 
-void Model::defineConstraintFour() {
-
-  for (int i = 0; i < nConnections; i++) {
-
-    for (int j = 0; j < nConnections; j++) {
-
-      for (int c = 0; c < nChannels; c++) {
-
-      }
-    }
-  }
-
-}
-
 void Model::defineConstraintFive() {
 
   for (int i = 0; i < nConnections; i++) {
@@ -400,30 +386,6 @@ void Model::defineConstraintSeven() {
       }
     }
   }
-}
-
-void Model::defineConstraintEight() {
-
-}
-
-void Model::defineConstraintNine() {
-
-}
-
-void Model::defineConstraintTen() {
-
-}
-
-void Model::defineConstraintEleven() {
-
-}
-
-void Model::defineConstraintTwelve() {
-
-}
-
-void Model::defineConstraintThirteen() {
-
 }
 
 void Model::defineConstraints() {
