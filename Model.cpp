@@ -12,6 +12,7 @@ Model::Model(char *file, type formulation) {
     exit(1);
   }
 
+  _type = formulation;
   nChannels = 45, nChannels20MHz = 25, nChannels40MHz = 12, nChannels80MHz = 6, nChannels160MHz = 2;
 
   //TODO: change the dummy variables to its respective correct names
@@ -62,7 +63,6 @@ Model::Model(char *file, type formulation) {
   generateInterferenceDistanceMatrix();
 
   //initBig_Mij();
-
 
   env = new GRBEnv();
   model = new GRBModel(*env);
@@ -205,10 +205,24 @@ void Model::createDecisionVariables() {
   }
 
   //variavel I_{ij}
+  for (int i = 0; i < nConnections; i++) {
+    for (int j = 0; j < nConnections; j++) {
+
+      I[i][j] = model->addVar(0.0, 1.0, 0.0, GRB_INTEGER, ""); //TODO: Put the right name
+    }
+  }
 
 
   //Variavel I_{ij}^{c}
+  for (int i = 0; i < nConnections; i++) {
+    for (int j = 0; j < nConnections; j++) {
 
+      for (int c = 0; c < nChannels; c++) {
+
+        IC[i][j][c] = model->addVar(0.0, 1.0, 0.0, GRB_INTEGER, ""); //TODO: Put the right name
+      }
+    }
+  }
 
 
 }
