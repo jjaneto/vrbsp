@@ -423,6 +423,10 @@ void Model::defineObjectiveFunction() {
   model->setObjective(function, GRB_MAXIMIZE);
 }
 
+void Model::solve() {
+  model->optimize();
+}
+
 
 
 

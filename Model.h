@@ -148,6 +148,8 @@ public:
 
     void defineConstraintThirteen();
 
+    void solve();
+
 };
 
 #endif //VRBSP_MODEL_H
