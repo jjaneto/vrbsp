@@ -6,3 +6,5 @@ CMakeCache.txt
 CmakeFiles/*
 draft/*
 Makefile
+**/*.lp
+**/*.sol

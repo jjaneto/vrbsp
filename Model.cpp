@@ -4,13 +4,53 @@
 
 #include "Model.h"
 
-Model::Model(char *file, type formulation) {
-  FILE *file_ = fopen(file, "r");
+class mycallback : public GRBCallback {
+public:
+    double lastiter;
+    double lastnode;
+    int numvars;
+    GRBVar *vars;
+//    ofstream* logfile;
+//    vector<set<int> > adjList;
+    int nVertex;
+
+    mycallback(int xnumvars) {//, ofstream* xlogfile, vector<set<int> > adjList) {
+      lastiter = lastnode = -GRB_INFINITY;
+      numvars = xnumvars;
+//      vars = xvars;
+//      logfile = xlogfile;
+    }
+
+protected:
+    void callback() {
+      try {
+        if (where == GRB_CB_MIPNODE) {
+          if (getIntInfo(GRB_CB_MIPNODE_STATUS) == GRB_OPTIMAL) {
+
+          }
+        }
+      } catch (GRBException e) {
+        std::cout << "Error number: " << e.getErrorCode() << std::endl;
+        std::cout << e.getMessage() << std::endl;
+      }
+    }
+
+private:
+
+};
+
+Model::Model(std::string file, type formulation) {
+  FILE *file_ = fopen(file.c_str(), "r");
 
   if (file_ == nullptr) {
     fprintf(stderr, "Error opening file");
     exit(1);
   }
+
+  dataRates.assign(10, std::vector<double>(4, 0));//inicializa com zeros
+
+  //SINR.assign(10, vector<double>(4));
+  SINR.assign(10, std::vector<double>(4, 0));//inicializa com zeros
 
   _type = formulation;
   nChannels = 45, nChannels20MHz = 25, nChannels40MHz = 12, nChannels80MHz = 6, nChannels160MHz = 2;
@@ -22,11 +62,11 @@ Model::Model(char *file, type formulation) {
   fscanf(file_, "%d %lf %lf %lf %lf %lf %lf %lf %lf", &nConnections, &time, &alfa, &noise, &powerSender, &aux1, &aux1,
          &aux1, &aux1);
 
-  /*  //TODO: Check why this is necessary
+  //TODO: Check why this is necessary
   if (noise != 0) {
     noise = convertDBMToMW(noise);
   }
-   */
+
 
   for (int i = 0; i < 10; i++) {
     for (int j = 0; j < 4; j++) {
@@ -41,7 +81,7 @@ Model::Model(char *file, type formulation) {
   }
 
   //TODO: Check why this is necessary
-  //convertTableToMW(SINR, SINR, 10, 4);
+  convertTableToMW(SINR, SINR, 10, 4);
 
   for (int i = 0; i < nConnections; i++) {
     Coordenate coord;
@@ -70,6 +110,19 @@ Model::Model(char *file, type formulation) {
   createDecisionVariables();
   defineConstraints();
   defineObjectiveFunction();
+
+//  mycallback *cb = new mycallback(10);
+//
+//  model->setCallback(cb);
+
+
+//  model->set(GRB_DoubleParam_Heuristics, 0.0);
+
+  try {
+    model->write("output.lp");
+  } catch (GRBException e) {
+    std::cout << e.getMessage() << std::endl;
+  }
 }
 
 Model::~Model() {
@@ -158,9 +211,6 @@ void Model::generateInterferenceDistanceMatrix() { //TODO: Double check this fun
     }
   }
 
-  //TODO: Why is this necessary? Or, actually, is this necessary?
-  //recCoord.clear();
-  //sendersCoord.clear();
 }
 
 void Model::createDecisionVariables() {
@@ -173,7 +223,7 @@ void Model::createDecisionVariables() {
       //
       for (int c = 0; c < nChannels; c++) {
 
-        sprintf(varName, "var_X:[%d][%d][%d]", i, j, c);
+        sprintf(varName, "X_[%d][%d][%d]", i, j, c);
         x[i][j][c] = model->addVar(0.0, 1.0, 0.0, GRB_BINARY, varName);
       }
     }
@@ -188,7 +238,7 @@ void Model::createDecisionVariables() {
 
         for (int d = 0; d < 10; d++) {
 
-          sprintf(varName, "var_Y:[%d][%d][%d][%d]", i, j, b, d);
+          sprintf(varName, "Y_[%d][%d][%d][%d]", i, j, b, d);
           y[i][j][b][d] = model->addVar(0.0, 1.0, 0.0, GRB_BINARY, varName);
         }
       }
@@ -202,8 +252,8 @@ void Model::createDecisionVariables() {
 
       for (int c = 0; c < nChannels; c++) {
 
-        sprintf(varName, "var_Z:[%d][%d][%d]", i, j, c);
-        z[i][j][c] = model->addVar(0.0, GRB_INFINITY, 0.0, GRB_INTEGER, varName);
+        sprintf(varName, "Z_[%d][%d][%d]", i, j, c);
+        z[i][j][c] = model->addVar(0.0, 1.0, 0.0, GRB_BINARY, varName);
       }
     }
   }
@@ -212,7 +262,7 @@ void Model::createDecisionVariables() {
   for (int i = 0; i < nConnections; i++) {
     for (int j = 0; j < nConnections; j++) {
 
-      sprintf(varName, "var_I:[%d][%d]", i, j);
+      sprintf(varName, "I_[%d][%d]", i, j);
       I[i][j] = model->addVar(0.0, GRB_INFINITY, 0.0, GRB_CONTINUOUS, varName);
     }
   }
@@ -224,7 +274,7 @@ void Model::createDecisionVariables() {
 
       for (int c = 0; c < nChannels; c++) {
 
-        sprintf(varName, "var_IC:[%d][%d][%d]", i, j, c);
+        sprintf(varName, "IC_[%d][%d][%d]", i, j, c);
         IC[i][j][c] = model->addVar(0.0, GRB_INFINITY, 0.0, GRB_CONTINUOUS, varName);
       }
     }
@@ -237,20 +287,16 @@ void Model::defineConstraintOne() {
 
   for (int i = 0; i < nConnections; i++) {
 
-    for (int j = 0; j < nConnections; j++) {
+//    for (int j = 0; j < nConnections; j++) {
+    int j = i;
 
-      GRBLinExpr expr1, expr2;
+    GRBLinExpr expr1, expr2;
 
-      for (int c = 0; c < nChannels; c++) {
-        expr1 += x[i][j][c];
-      }
-
-      for (int c = 0; c < nChannels; c++) {
-        expr2 += x[j][i][c];
-      }
-
-      model->addConstr(expr1 + expr2 <= 1);
+    for (int c = 0; c < nChannels; c++) {
+      expr1 += x[i][j][c];
     }
+    model->addConstr(expr1 <= 1.0);
+//    }
   }
 }
 
@@ -265,43 +311,40 @@ void Model::defineConstraintTwo() {
     }
 
     for (int i = 0; i < nConnections; i++) {
+//      for (int j = 0; j < nConnections; j++) {
+      int j = i;
 
-      for (int j = 0; j < nConnections; j++) {
-//        if (i == j)
-//          continue;
+      GRBLinExpr expr1, expr2;
 
-        GRBLinExpr expr1, expr2;
-
-        for (int s = 0; s < nDataRates; s++) {
-          expr1 += y[i][j][b][s];
-        }
-
-        switch (b) {
-          case 0:
-            for (int c = 0; c < nDataRates; c++)
-              expr2 += x[i][j][channels20MHz[c]];
-
-            break;
-          case 1:
-            for (int c = 0; c < nDataRates; c++)
-              expr2 += x[i][j][channels40MHz[c]];
-
-            break;
-          case 2:
-            for (int c = 0; c < nDataRates; c++)
-              expr2 += x[i][j][channels80MHz[c]];
-
-            break;
-          case 3:
-            for (int c = 0; c < nDataRates; c++)
-              expr2 += x[i][j][channels160MHz[c]];
-
-            break;
-        }
-
-
-        model->addConstr(expr1 <= expr2);
+      for (int s = 0; s < nDataRates; s++) {
+        expr1 += y[i][j][b][s];
       }
+
+      switch (b) {
+        case 0:
+          for (int c = 0; c < nChannels20MHz; c++)
+            expr2 += x[i][j][channels20MHz[c]];
+
+          break;
+        case 1:
+          for (int c = 0; c < nChannels40MHz; c++)
+            expr2 += x[i][j][channels40MHz[c]];
+
+          break;
+        case 2:
+          for (int c = 0; c < nChannels80MHz; c++)
+            expr2 += x[i][j][channels80MHz[c]];
+
+          break;
+        case 3:
+          for (int c = 0; c < nChannels160MHz; c++)
+            expr2 += x[i][j][channels160MHz[c]];
+
+          break;
+      }
+
+      model->addConstr(expr1 <= expr2);
+//      }
     }
   }
 
@@ -310,37 +353,52 @@ void Model::defineConstraintTwo() {
 void Model::defineConstraintThree() {
 
   for (int i = 0; i < nConnections; i++) {
+    int j = i;
 
-    for (int j = 0; j < nConnections; j++) {
+    for (int c1 = 0; c1 < nChannels; c1++) {
+      GRBLinExpr expr;
+      for (int c2 = 0; c2 < nChannels; c2++) {
 
-      for (int c1 = 0; c1 < nChannels; c1++) {
-        GRBLinExpr expr;
-        for (int c2 = 0; c2 < nChannels; c2++) {
-
-          if (overlap[c1][c2]) {
-            expr += x[i][j][c1];
-          }
-
+        if (overlap[c1][c2]) {
+          expr += x[i][j][c2];
         }
-        model->addConstr(expr == z[i][j][c1]);
+
       }
+      model->addConstr(expr == z[i][j][c1]);
     }
   }
 
 }
 
+void Model::defineConstraintFour() {
+
+  for (int i = 0; i < nConnections; i++) {
+    for (int c = 0; c < nChannels; c++) {
+
+      GRBLinExpr expr;
+
+      for (int u = 0; u < nConnections; u++) {
+        if (u != i) {
+          expr += interferenceMatrix[i][u] * z[u][u][c];
+        }
+      }
+
+      model->addConstr(IC[i][i][c] == expr);
+    }
+  }
+}
+
 void Model::defineConstraintFive() {
 
   for (int i = 0; i < nConnections; i++) {
-    for (int j = 0; j < nConnections; j++) {
+    int j = i;
+    for (int c = 0; c < nChannels; c++) {
+      GRBLinExpr expr;
 
-      for (int c = 0; c < nChannels; c++) {
-        GRBLinExpr expr;
+//      expr = IC[i][j][c] - std::numeric_limits<double>::max() * (1 - x[i][j][c]);
+      expr = IC[i][j][c] - M_ij[i] * (1 - x[i][j][c]);
 
-        expr = IC[i][j][c] - M_ij[i] * (1 - x[i][j][c]);
-
-        model->addConstr(I[i][j] >= expr);
-      }
+      model->addConstr(I[i][j] >= expr);
     }
   }
 
@@ -349,44 +407,41 @@ void Model::defineConstraintFive() {
 void Model::defineConstraintSix() {
 
   for (int i = 0; i < nConnections; i++) {
-    for (int j = 0; j < nConnections; j++) {
 
-      for (int c = 0; c < nChannels; c++) {
-        GRBLinExpr expr;
+    int j = i;
+    for (int c = 0; c < nChannels; c++) {
+      GRBLinExpr expr;
 
-        expr = IC[i][j][c] + M_ij[i] * (1 - x[i][j][c]);
+      expr = IC[i][j][c] + M_ij[i] * (1 - x[i][j][c]);
 
-        model->addConstr(I[i][j] <= expr);
-      }
+      model->addConstr(I[i][j] <= expr);
     }
   }
 }
 
 void Model::defineConstraintSeven() {
   for (int i = 0; i < nConnections; i++) {
-    for (int j = 0; j < nConnections; j++) {
-      GRBLinExpr expr;
+    int j = i;
+    GRBLinExpr expr;
 
-      for (int b = 0; b < 4; b++) {
+    for (int b = 0; b < 4; b++) {
 
-        if (b == 0) {
-          nDataRates = 9;
-        } else {
-          nDataRates = 10;
-        }
-
-        for (int s = 0; s < nDataRates; s++) {
-
-          expr += ((connections[i].powerSR / SINR[s][b]) - noise) * y[i][j][b][s];
-        }
+      if (b == 0) {
+        nDataRates = 9;
+      } else {
+        nDataRates = 10;
       }
 
-      model->addConstr(expr >= I[i][j]);
+      for (int s = 0; s < nDataRates; s++) {
+
+        expr += ((connections[i].powerSR / SINR[s][b]) - noise) * y[i][j][b][s];
+      }
     }
+
+    model->addConstr(expr >= I[i][j]);
   }
 }
 
-//TODO: Resolve for M_ij[]
 void Model::defineConstraints() {
   if (_type == nonlinear) {
 
@@ -394,6 +449,7 @@ void Model::defineConstraints() {
     defineConstraintOne();
     defineConstraintTwo();
     defineConstraintThree();
+    defineConstraintFour();
     defineConstraintFive();
     defineConstraintSix();
     defineConstraintSeven();
@@ -407,6 +463,7 @@ void Model::createBigM() {
 
   for (int c = 0; c < nConnections; c++) {
     double value = computeInterference(c);
+//    printf("para conexao %d = %.10lf\n", c, value);
     M_ij.emplace_back(value);
   }
 }
@@ -435,24 +492,68 @@ void Model::defineObjectiveFunction() {
 
         for (int s = 0; s < 10; s++) {
 
-          function += ((i == j) ? dataRates[s][b] * y[i][j][b][s] : 0); //TODO: Check whether if it is [s][b] or [b][s]
+          if (i == j) {
+            function += dataRates[s][b] * y[i][j][b][s];
+          } else {
+//            function += 0 * y[i][j][b][s];
+          }
         }
       }
     }
   }
 
-  model->setObjective(function, GRB_MAXIMIZE);
+
+  try {
+    model->setObjective(function, GRB_MAXIMIZE);
+  } catch (GRBException e) {
+    std::cout << e.getErrorCode() << std::endl;
+    std::cout << e.getMessage() << std::endl;
+    exit(-1);
+  }
 }
 
 void Model::solve() {
   model->optimize();
+
+  model->write("model.lp");
+  model->write("out.sol");
 }
 
 int Model::getStatus() {
   return model->get(GRB_IntAttr_Status);
 }
 
+double Model::convertDBMToMW(double _value) {
+  double result = 0.0, b;
 
+  b = _value / 10.0;// dBm dividido por 10
+  result = pow(10.0, b);//Converte de DBm para mW
+
+  return result;
+}
+
+void
+Model::convertTableToMW(const std::vector<std::vector<double> > &_SINR, std::vector<std::vector<double> > &_SINR_Mw,
+                        int _lines,
+                        int _rows) {
+  double result, b;
+
+  for (int i = 0; i < _SINR_Mw.size(); i++) {
+    for (int j = 0; j < _SINR_Mw[i].size(); j++) {
+
+      if (_SINR[i][j] != 0) {
+        b = _SINR[i][j] / 10.0;// dBm divided by 10
+        result = pow(10.0, b);//Convert DBM to mW
+
+        _SINR_Mw[i][j] = result;
+      } else {
+        _SINR_Mw[i][j] = 0;
+      }
+    }
+
+  }
+
+}
 
 
 

@@ -34,7 +34,7 @@ public:
         linear
     };
 
-    Model(char file[], type formulation);
+    Model(std::string file, type formulation);
 
     ~Model();
 
@@ -97,20 +97,19 @@ public:
 
     GRBEnv *env;
     GRBModel *model;
-    GRBVar **vars; //TODO: refactor this variable
-    GRBVar x[250][250][50], y[250][250][4][10], z[250][250][45], I[250][250], IC[250][250][45];
+    GRBVar x[515][515][50], y[515][515][4][10], z[515][515][45], I[515][512], IC[515][512][45];
     GRBLinExpr objectiveFunction;
     std::vector<GRBLinExpr *> constraints;
 
     type _type;
 
-    std::vector<int> M_ij;
+    std::vector<double> M_ij;
     std::vector<std::vector<double>> interferenceMatrix;
     std::vector<std::vector<double>> distanceMatrix;
     std::vector<Coordenate> sendersCoord, recCoord;
     std::vector<Connection> connections;
 
-    double dataRates[10][4], SINR[10][4];
+    std::vector<std::vector<double> > dataRates, SINR;
 
     double time, alfa, noise, powerSender;
 
@@ -123,6 +122,12 @@ public:
     void createDecisionVariables();
 
     void createBigM();
+
+    double convertDBMToMW(double _value);
+
+    void convertTableToMW(const std::vector<std::vector<double> > &_SINR, std::vector<std::vector<double> > &_SINR_Mw,
+                          int _lines,
+                          int _rows);
 
     inline double computeInterference(double c);
 
@@ -155,6 +160,10 @@ public:
     int getStatus();
 
     void solve();
+
+//    double getTimeSpent() {
+//      return model->get
+//    }
 
 };
 
