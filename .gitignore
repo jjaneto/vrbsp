@@ -8,3 +8,4 @@ draft/*
 Makefile
 **/*.lp
 **/*.sol
+results/*

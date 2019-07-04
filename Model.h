@@ -36,8 +36,11 @@ public:
 
     Model(std::string file, type formulation);
 
+    Model(std::string file, type formulation, int number, std::string outputFile);
+
     ~Model();
 
+    int inst;
     int nDecisionVariables;
     int nConstraints;
     int nConnections;
@@ -111,6 +114,8 @@ public:
 
     std::vector<std::vector<double> > dataRates, SINR;
 
+    std::string outputFile;
+
     double time, alfa, noise, powerSender;
 
     void defineObjectiveFunction();
@@ -160,6 +165,10 @@ public:
     int getStatus();
 
     void solve();
+
+    void printResults(const std::string file);
+
+    void printResults();
 
 //    double getTimeSpent() {
 //      return model->get

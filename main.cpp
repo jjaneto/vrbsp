@@ -8,28 +8,34 @@
 
 int main() {
 
-  std::chrono::time_point<std::chrono::system_clock> end, start;
+  using namespace std;
+  chrono::time_point<std::chrono::system_clock> end, start;
 //  char file[100] = "./draft/CPLEX_BigM/src/instancias/U_8/U_8_1.txt";
 
-  std::string file = "./draft/CPLEX_BigM/src/instancias/U_8/U_8_";
+  int l = 128;
+  std::string file = "./draft/CPLEX_BigM/src/instancias/U_" + to_string(l) + "/U_" + to_string(l) + "_";
   std::string extensao = ".txt";
 
-  Model *model;
 
-  for (int i = 1; i <= 1; i++) {
+  for (int i = 1; i <= 30; i++) {
+    Model *model;
     std::string arquivo = file + std::to_string(i) + extensao;
+    std::string saida = "results/no-heuristic/L_" + to_string(l) + "/";
     printf("arquivo eh %s\n", arquivo.c_str());
-    model = new Model(arquivo, Model::type::linear);
-  }
+    model = new Model(arquivo, Model::type::linear, i, saida);
 
-//  start = std::chrono::system_clock::now();
-  model->solve();
-//  end = std::chrono::system_clock::now();
+    //  start = std::chrono::system_clock::now();
+    model->solve();
+    model->printResults();
 
-  int status = model->getStatus();
-  if (status == GRB_OPTIMAL) {
-    //Do something
-    puts("Optimal found!");
+    int status = model->getStatus();
+    if (status == GRB_OPTIMAL) {
+      //Do something
+      puts("Optimal found!");
+    }
+
+
+    delete model;
   }
 
 

@@ -4,43 +4,11 @@
 
 #include "Model.h"
 
-class mycallback : public GRBCallback {
-public:
-    double lastiter;
-    double lastnode;
-    int numvars;
-    GRBVar *vars;
-//    ofstream* logfile;
-//    vector<set<int> > adjList;
-    int nVertex;
-
-    mycallback(int xnumvars) {//, ofstream* xlogfile, vector<set<int> > adjList) {
-      lastiter = lastnode = -GRB_INFINITY;
-      numvars = xnumvars;
-//      vars = xvars;
-//      logfile = xlogfile;
-    }
-
-protected:
-    void callback() {
-      try {
-        if (where == GRB_CB_MIPNODE) {
-          if (getIntInfo(GRB_CB_MIPNODE_STATUS) == GRB_OPTIMAL) {
-
-          }
-        }
-      } catch (GRBException e) {
-        std::cout << "Error number: " << e.getErrorCode() << std::endl;
-        std::cout << e.getMessage() << std::endl;
-      }
-    }
-
-private:
-
-};
-
-Model::Model(std::string file, type formulation) {
+Model::Model(std::string file, type formulation, int number, std::string outputFile) {
   FILE *file_ = fopen(file.c_str(), "r");
+
+  this->outputFile = outputFile;
+  inst = number;
 
   if (file_ == nullptr) {
     fprintf(stderr, "Error opening file");
@@ -106,6 +74,7 @@ Model::Model(std::string file, type formulation) {
 //
   env = new GRBEnv();
   model = new GRBModel(*env);
+
 //  model->set(GRB_IntParam_Presolve, 0);
   createDecisionVariables();
   defineConstraints();
@@ -115,14 +84,9 @@ Model::Model(std::string file, type formulation) {
 //
 //  model->setCallback(cb);
 
+  model->set(GRB_StringParam_LogFile, outputFile + "gurobiOUT_" + std::to_string(number) + ".txt");
 
-//  model->set(GRB_DoubleParam_Heuristics, 0.0);
-
-  try {
-    model->write("output.lp");
-  } catch (GRBException e) {
-    std::cout << e.getMessage() << std::endl;
-  }
+  model->set(GRB_DoubleParam_Heuristics, 0.0);
 }
 
 Model::~Model() {
@@ -515,8 +479,10 @@ void Model::defineObjectiveFunction() {
 void Model::solve() {
   model->optimize();
 
-  model->write("model.lp");
-  model->write("out.sol");
+  try {
+  } catch (GRBException e) {
+    std::cout << e.getMessage() << std::endl;
+  }
 }
 
 int Model::getStatus() {
@@ -553,6 +519,43 @@ Model::convertTableToMW(const std::vector<std::vector<double> > &_SINR, std::vec
 
   }
 
+}
+
+void Model::printResults() {
+  printf("Salvando no arquivo %s\n", outputFile.c_str());
+  using namespace std;
+  vector<std::string> rows;
+
+  int opt = 0, gap = 1, obj = 2, objb = 3, runtime = 4;
+  FILE *files[5];
+
+  string arr[] = {"opt", "gap", "obj", "objb", "runtime"};
+
+  for (int i = 0; i < 5; i++) {
+    string path = outputFile + arr[i] + "_" + to_string(inst) + ".txt";
+    files[i] = fopen(path.c_str(), "a");
+
+    if (files[i] == nullptr) {
+      puts("deu bosta");
+      exit(-1);
+    }
+  }
+
+  if (getStatus() == GRB_OPTIMAL) {
+    fprintf(files[opt], "1\n");
+  } else fprintf(files[opt], "0\n");
+
+  try {
+    fprintf(files[1], "%lf\n", model->get(GRB_DoubleAttr_MIPGap));
+    fprintf(files[2], "%lf\n", model->get(GRB_DoubleAttr_ObjVal));
+    fprintf(files[3], "%lf\n", model->get(GRB_DoubleAttr_ObjBound));
+    fprintf(files[4], "%lf\n", model->get(GRB_DoubleAttr_Runtime));
+  } catch (GRBException e) {
+    std::cout << e.getMessage() << std::endl;
+  }
+
+  for (int i = 0; i < 5; i++)
+    fclose(files[i]);
 }
 
 
