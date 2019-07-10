@@ -100,7 +100,8 @@ public:
 
     GRBEnv *env;
     GRBModel *model;
-    GRBVar x[515][515][50], y[515][515][4][10], z[515][515][45], I[515][512], IC[515][512][45];
+    GRBVar x[515][50], y[515][4][10], z[515][45], I[515], IC[515][45];
+//    GRBVar x[515][515][50], y[515][515][4][10], z[515][515][45], I[515][512], IC[515][512][45];
     GRBLinExpr objectiveFunction;
     std::vector<GRBLinExpr *> constraints;
 
