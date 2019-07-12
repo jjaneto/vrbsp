@@ -80,13 +80,9 @@ Model::Model(std::string file, type formulation, int number, std::string outputF
   defineConstraints();
   defineObjectiveFunction();
 
-//  mycallback *cb = new mycallback(10);
-//
-//  model->setCallback(cb);
-
-  model->set(GRB_StringParam_LogFile, outputFile + "gurobiOUT_" + std::to_string(number) + ".txt");
-
-  model->set(GRB_DoubleParam_Heuristics, 0.0);
+  model->set(GRB_IntParam_LogToConsole, 0);
+//  model->set(GRB_StringParam_LogFile, outputFile + "gurobiOUT_" + std::to_string(number) + ".txt");
+//  model->set(GRB_DoubleParam_Heuristics, 0.0);
 }
 
 Model::~Model() {
@@ -232,15 +228,33 @@ void Model::createDecisionVariables() {
   }
 
 
-  //Variavel I_{ij}^{c}
-  for (int i = 0; i < nConnections; i++) {
-    for (int j = 0; j < nConnections; j++) {
+  if (_type == linear_bigM) {
+    //Variavel I_{ij}^{c}
+    for (int i = 0; i < nConnections; i++) {
+      for (int j = 0; j < nConnections; j++) {
 
-      for (int c = 0; c < nChannels; c++) {
+        for (int c = 0; c < nChannels; c++) {
 
-        sprintf(varName, "IC_[%d][%d][%d]", i, j, c);
-        IC[i][j][c] = model->addVar(0.0, GRB_INFINITY, 0.0, GRB_CONTINUOUS, varName);
+          sprintf(varName, "IC_[%d][%d][%d]", i, j, c);
+          IC[i][j][c] = model->addVar(0.0, GRB_INFINITY, 0.0, GRB_CONTINUOUS, varName);
+        }
       }
+    }
+  } else if (_type == linearV1){
+    try {
+      for (int i = 0; i < nConnections; i++) {
+        for (int j = 0; j < nConnections; j++) {
+
+          for (int u = 0; u < nConnections; u++) {
+            for (int v = 0; v < nConnections; v++) {
+              sprintf(varName, "W_[%d][%d][%d][%d]", i, j, u, v);
+              w[i][j][u][v] = model->addVar(0.0, 1.0, 0.0, GRB_CONTINUOUS, varName);
+            }
+          }
+        }
+      }
+    } catch(GRBException ex) {
+      std::cout << "epa " + ex.getMessage() << "\n";
     }
   }
 
@@ -359,7 +373,6 @@ void Model::defineConstraintFive() {
     for (int c = 0; c < nChannels; c++) {
       GRBLinExpr expr;
 
-//      expr = IC[i][j][c] - std::numeric_limits<double>::max() * (1 - x[i][j][c]);
       expr = IC[i][j][c] - M_ij[i] * (1 - x[i][j][c]);
 
       model->addConstr(I[i][j] >= expr);
@@ -406,10 +419,40 @@ void Model::defineConstraintSeven() {
   }
 }
 
+void Model::defineConstraintEight() {
+  for (int i = 0; i < nConnections; i++) {
+
+    for (int u = 0; u < nConnections; u++) {
+      for (int c = 0; c < nChannels; c++) {
+        if (i != u) {
+          model->addConstr(w[i][i][u][u] >= x[i][i][c] + z[u][u][c] - 1);
+        }
+      }
+    }
+  }
+}
+
+void Model::defineConstraintNine() {
+  for (int i = 0; i < nConnections; i++) {
+    for (int c = 0; c < nChannels; c++) {
+
+      GRBLinExpr expr;
+
+      for (int u = 0; u < nConnections; u++) {
+        if (u != i) {
+          expr += interferenceMatrix[i][u] * w[i][i][u][u];
+        }
+      }
+
+      model->addConstr(I[i][i] == expr);
+    }
+  }
+}
+
 void Model::defineConstraints() {
   if (_type == nonlinear) {
 
-  } else if (_type == linear) {
+  } else if (_type == linear_bigM) {
     defineConstraintOne();
     defineConstraintTwo();
     defineConstraintThree();
@@ -417,8 +460,13 @@ void Model::defineConstraints() {
     defineConstraintFive();
     defineConstraintSix();
     defineConstraintSeven();
-  } else {
-
+  } else if (_type == linearV1){
+    defineConstraintOne();
+    defineConstraintTwo();
+    defineConstraintThree();
+    defineConstraintSeven();
+    defineConstraintEight();
+    defineConstraintNine();
   }
 }
 
@@ -558,6 +606,18 @@ void Model::printResults() {
     fclose(files[i]);
 }
 
+double Model::getObjVal() {
+  return model->get(GRB_DoubleAttr_ObjVal);
+}
 
+double Model::getObjBound() {
+  return model->get(GRB_DoubleAttr_ObjBound);
+}
 
+double Model::getMIPGap() {
+  return model->get(GRB_DoubleAttr_MIPGap);
+}
 
+double Model::getRuntime() {
+  return model->get(GRB_DoubleAttr_Runtime);
+}

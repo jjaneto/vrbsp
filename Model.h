@@ -30,8 +30,8 @@ public:
 
     enum type {
         nonlinear,
-        linearBIGM,
-        linear
+        linearV1,
+        linear_bigM
     };
 
     Model(std::string file, type formulation);
@@ -100,7 +100,7 @@ public:
 
     GRBEnv *env;
     GRBModel *model;
-    GRBVar x[515][515][50], y[515][515][4][10], z[515][515][45], I[515][512], IC[515][512][45];
+    GRBVar x[515][515][50], y[515][515][4][10], z[515][515][45], I[515][512], IC[515][512][45], w[16][16][16][16];
     GRBLinExpr objectiveFunction;
     std::vector<GRBLinExpr *> constraints;
 
@@ -170,9 +170,13 @@ public:
 
     void printResults();
 
-//    double getTimeSpent() {
-//      return model->get
-//    }
+    double getObjVal();
+
+    double getObjBound();
+
+    double getMIPGap();
+
+    double getRuntime();
 
 };
 
