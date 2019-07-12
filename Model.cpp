@@ -93,7 +93,7 @@ void Model::generateInterferenceDistanceMatrix() { //TODO: Double check this fun
 
   Connection auxConnection;
   Interference auxInterference;
-  double coordX1, coordY1, coordX2, coordY2, xResult, yResult, result, inteferenceSenderReceptor;
+  double coordX1, coordY1, coordX2, coordY2, xResult, yResult, result;
 
   for (int i = 0; i < nConnections; i++) {
 
@@ -240,7 +240,7 @@ void Model::createDecisionVariables() {
         }
       }
     }
-  } else if (_type == linearV1){
+  } else if (_type == linearV1) {
     try {
       for (int i = 0; i < nConnections; i++) {
         for (int j = 0; j < nConnections; j++) {
@@ -253,7 +253,7 @@ void Model::createDecisionVariables() {
           }
         }
       }
-    } catch(GRBException ex) {
+    } catch (GRBException ex) {
       std::cout << "epa " + ex.getMessage() << "\n";
     }
   }
@@ -265,16 +265,12 @@ void Model::defineConstraintOne() {
 
   for (int i = 0; i < nConnections; i++) {
 
-//    for (int j = 0; j < nConnections; j++) {
-    int j = i;
-
     GRBLinExpr expr1, expr2;
 
     for (int c = 0; c < nChannels; c++) {
-      expr1 += x[i][j][c];
+      expr1 += x[i][i][c];
     }
     model->addConstr(expr1 <= 1.0);
-//    }
   }
 }
 
@@ -289,40 +285,37 @@ void Model::defineConstraintTwo() {
     }
 
     for (int i = 0; i < nConnections; i++) {
-//      for (int j = 0; j < nConnections; j++) {
-      int j = i;
 
       GRBLinExpr expr1, expr2;
 
       for (int s = 0; s < nDataRates; s++) {
-        expr1 += y[i][j][b][s];
+        expr1 += y[i][i][b][s];
       }
 
       switch (b) {
         case 0:
           for (int c = 0; c < nChannels20MHz; c++)
-            expr2 += x[i][j][channels20MHz[c]];
+            expr2 += x[i][i][channels20MHz[c]];
 
           break;
         case 1:
           for (int c = 0; c < nChannels40MHz; c++)
-            expr2 += x[i][j][channels40MHz[c]];
+            expr2 += x[i][i][channels40MHz[c]];
 
           break;
         case 2:
           for (int c = 0; c < nChannels80MHz; c++)
-            expr2 += x[i][j][channels80MHz[c]];
+            expr2 += x[i][i][channels80MHz[c]];
 
           break;
         case 3:
           for (int c = 0; c < nChannels160MHz; c++)
-            expr2 += x[i][j][channels160MHz[c]];
+            expr2 += x[i][i][channels160MHz[c]];
 
           break;
       }
 
       model->addConstr(expr1 <= expr2);
-//      }
     }
   }
 
@@ -369,13 +362,12 @@ void Model::defineConstraintFour() {
 void Model::defineConstraintFive() {
 
   for (int i = 0; i < nConnections; i++) {
-    int j = i;
     for (int c = 0; c < nChannels; c++) {
       GRBLinExpr expr;
 
-      expr = IC[i][j][c] - M_ij[i] * (1 - x[i][j][c]);
+      expr = IC[i][i][c] - M_ij[i] * (1 - x[i][i][c]);
 
-      model->addConstr(I[i][j] >= expr);
+      model->addConstr(I[i][i] >= expr);
     }
   }
 
@@ -385,20 +377,18 @@ void Model::defineConstraintSix() {
 
   for (int i = 0; i < nConnections; i++) {
 
-    int j = i;
     for (int c = 0; c < nChannels; c++) {
       GRBLinExpr expr;
 
-      expr = IC[i][j][c] + M_ij[i] * (1 - x[i][j][c]);
+      expr = IC[i][i][c] + M_ij[i] * (1 - x[i][i][c]);
 
-      model->addConstr(I[i][j] <= expr);
+      model->addConstr(I[i][i] <= expr);
     }
   }
 }
 
 void Model::defineConstraintSeven() {
   for (int i = 0; i < nConnections; i++) {
-    int j = i;
     GRBLinExpr expr;
 
     for (int b = 0; b < 4; b++) {
@@ -411,11 +401,11 @@ void Model::defineConstraintSeven() {
 
       for (int s = 0; s < nDataRates; s++) {
 
-        expr += ((connections[i].powerSR / SINR[s][b]) - noise) * y[i][j][b][s];
+        expr += ((connections[i].powerSR / SINR[s][b]) - noise) * y[i][i][b][s];
       }
     }
 
-    model->addConstr(expr >= I[i][j]);
+    model->addConstr(expr >= I[i][i]);
   }
 }
 
@@ -460,7 +450,7 @@ void Model::defineConstraints() {
     defineConstraintFive();
     defineConstraintSix();
     defineConstraintSeven();
-  } else if (_type == linearV1){
+  } else if (_type == linearV1) {
     defineConstraintOne();
     defineConstraintTwo();
     defineConstraintThree();
