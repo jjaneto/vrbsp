@@ -26,9 +26,9 @@ int main() {
     std::string saida = "results/";
 
     if (!teste) {
-      saida += "no-heuristic/L_" + to_string(l) + "/";
+      saida += "L_" + to_string(l) + "/";
     } else {
-      saida += "teste/no-heuristic/L_" + to_string(l) + "/";
+      saida += "teste/L_" + to_string(l) + "/";
     }
 
     int result = mkdir(saida.c_str(), 0755);

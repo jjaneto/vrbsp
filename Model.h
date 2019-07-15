@@ -182,6 +182,18 @@ public:
 
     void setLogToMyDefaultFile();
 
+    void printXVariables(FILE** out);
+
+    void printYVariables(FILE** out);
+
+    void printZVariables(FILE** out);
+
+    void printICVariables(FILE** out);
+
+    void printIVariables(FILE** out);
+
+    void printWVariables(FILE** out);
+
 };
 
 #endif //VRBSP_MODEL_H

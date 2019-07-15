@@ -462,7 +462,6 @@ void Model::createBigM() {
 
   for (int c = 0; c < nConnections; c++) {
     double value = computeInterference(c);
-//    printf("para conexao %d = %.10lf\n", c, value);
     M_ij.emplace_back(value);
   }
 }
@@ -561,18 +560,18 @@ void Model::printResults() {
   using namespace std;
   vector<std::string> rows;
 
-  int opt = 0, gap = 1, obj = 2, objb = 3, runtime = 4;
-  FILE *files[5];
+  int opt = 0, gap = 1, obj = 2, objb = 3, runtime = 4, vars = 5;
+  FILE *files[6];
 
-  string arr[] = {"opt", "gap", "obj", "objb", "runtime"};
+  string arr[] = {"opt", "gap", "obj", "objb", "runtime", "vars"};
 
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < 6; i++) {
     string path = outputFile + arr[i] + "_" + to_string(inst) + ".txt";
     files[i] = fopen(path.c_str(), "a");
 
     if (files[i] == nullptr) {
       puts("deu bosta");
-      exit(-1);
+      exit(EXIT_FAILURE);
     }
   }
 
@@ -581,15 +580,25 @@ void Model::printResults() {
   } else fprintf(files[opt], "0\n");
 
   try {
-    fprintf(files[1], "%lf\n", model->get(GRB_DoubleAttr_MIPGap));
-    fprintf(files[2], "%lf\n", model->get(GRB_DoubleAttr_ObjVal));
-    fprintf(files[3], "%lf\n", model->get(GRB_DoubleAttr_ObjBound));
-    fprintf(files[4], "%lf\n", model->get(GRB_DoubleAttr_Runtime));
+    fprintf(files[gap], "%lf\n", model->get(GRB_DoubleAttr_MIPGap));
+    fprintf(files[obj], "%lf\n", model->get(GRB_DoubleAttr_ObjVal));
+    fprintf(files[objb], "%lf\n", model->get(GRB_DoubleAttr_ObjBound));
+    fprintf(files[runtime], "%lf\n", model->get(GRB_DoubleAttr_Runtime));
+    printXVariables(&files[vars]);
+    printYVariables(&files[vars]);
+    printIVariables(&files[vars]);
+
+    if (_type == linear_bigM) {
+      printICVariables(&files[vars]);
+      printZVariables(&files[vars]);
+    } else if (_type == linearV1) {
+      printWVariables(&files[vars]);
+    }
   } catch (GRBException e) {
     std::cout << e.getMessage() << std::endl;
   }
 
-  for (int i = 0; i < 5; i++)
+  for (int i = 0; i < 6; i++)
     fclose(files[i]);
 }
 
@@ -619,4 +628,69 @@ void Model::turnOffLogConsole(bool flag) {
 
 void Model::setLogToMyDefaultFile() {
   model->set(GRB_StringParam_LogFile, outputFile + "gurobiOUT_" + std::to_string(inst) + ".txt");
+}
+
+void Model::printXVariables(FILE **out) {
+  fprintf(*out, "==== X VARIABLES ====\n");
+  for (int i = 0; i < nConnections; i++) {
+    for (int c = 0; c < nChannels; c++) {
+      if (x[i][c].get(GRB_DoubleAttr_X) > 0.0) {
+        std::string outs_ =
+                x[i][c].get(GRB_StringAttr_VarName) + ": " + std::to_string(x[i][c].get(GRB_DoubleAttr_X)) + "\n";
+        fprintf(*out, outs_.c_str());
+      }
+    }
+  }
+}
+
+void Model::printYVariables(FILE **out) {
+  fprintf(*out, "==== Y VARIABLES ====\n");
+  for (int i = 0; i < nConnections; i++) {
+    for (int b = 0; b < 10; b++) {
+      int dataRates = (b == 0) ? 9 : 10;
+
+      for (int s = 0; s < dataRates; s++) {
+        if (y[i][b][s].get(GRB_DoubleAttr_X) > 0.0) {
+          std::string outs_ =
+                  y[i][b][s].get(GRB_StringAttr_VarName) + ": " + std::to_string(y[i][b][s].get(GRB_DoubleAttr_X)) +
+                  "\n";
+          fprintf(*out, outs_.c_str());
+        }
+      }
+    }
+  }
+}
+
+void Model::printZVariables(FILE **out) {
+  fprintf(*out, "==== Z VARIABLES ====\n");
+  for (int i = 0; i < nConnections; i++) {
+    for (int c = 0; c < nChannels; c++) {
+      if (z[i][c].get(GRB_DoubleAttr_X) > 0.0) {
+        std::string outs_ =
+                z[i][c].get(GRB_StringAttr_VarName) + ": " + std::to_string(z[i][c].get(GRB_DoubleAttr_X)) + "\n";
+        fprintf(*out, outs_.c_str());
+
+        for (int k = 0; k < nChannels; k++) {
+          if (overlap[c][k] && x[i][k].get(GRB_DoubleAttr_X) > 0.0) {
+            std::string outs_2 = "  -----> " +
+                    x[i][k].get(GRB_StringAttr_VarName) + ": " + std::to_string(x[i][k].get(GRB_DoubleAttr_X));
+
+            fprintf(*out, outs_2.c_str());
+          }
+        }
+      }
+    }
+  }
+}
+
+void Model::printICVariables(FILE **out) {
+
+}
+
+void Model::printIVariables(FILE **out) {
+
+}
+
+void Model::printWVariables(FILE **out) {
+
 }
