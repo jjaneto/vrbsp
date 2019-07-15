@@ -100,7 +100,7 @@ public:
 
     GRBEnv *env;
     GRBModel *model;
-    GRBVar x[515][50], y[515][4][10], z[515][45], I[515], IC[515][45], w[16][16];
+    GRBVar x[515][50], y[515][4][10], z[515][45], I[515], IC[515][45], w[512][512];
     GRBLinExpr objectiveFunction;
     std::vector<GRBLinExpr *> constraints;
 
@@ -177,6 +177,10 @@ public:
     double getMIPGap();
 
     double getRuntime();
+
+    void turnOffLogConsole(bool flag);
+
+    void setLogToMyDefaultFile();
 
 };
 
