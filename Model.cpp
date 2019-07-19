@@ -81,7 +81,7 @@ Model::Model(std::string file, type formulation, int number, std::string outputF
   defineObjectiveFunction();
 
   model->set(GRB_IntParam_LogToConsole, 0);
-//  model->set(GRB_StringParam_LogFile, outputFile + "gurobiOUT_" + std::to_string(number) + ".txt");
+  model->set(GRB_StringParam_LogFile, outputFile + "gurobiOUT_" + std::to_string(number) + ".txt");
 //  model->set(GRB_DoubleParam_Heuristics, 0.0);
 }
 
