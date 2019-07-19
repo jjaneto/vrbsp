@@ -78,8 +78,6 @@ Model::Model(std::string file, type formulation, int number, std::string outputF
   defineConstraints();
   defineObjectiveFunction();
 
-//  model->set(GRB_StringParam_LogFile, outputFile + "gurobiOUT_" + std::to_string(number) + ".txt");
-//  model->set(GRB_DoubleParam_Heuristics, 0.0);
 }
 
 Model::~Model() {
@@ -174,17 +172,17 @@ void Model::createDecisionVariables() {
 
   char varName[50];
   //variavel x
-  for (int i = 0; i < nConnections; i++) {
+//  for (int i = 0; i < nConnections; i++) {
     //
     for (int j = 0; j < nConnections; j++) {
       //
       for (int c = 0; c < nChannels; c++) {
 
-        sprintf(varName, "X_[%d][%d][%d]", i, j, c);
+        sprintf(varName, "X_[%d][%d][%d]", j, j, c);
         x[j][c] = model->addVar(0.0, 1.0, 0.0, GRB_BINARY, varName);
       }
     }
-  }
+//  }
 
   //variavel y
 //  for (int i = 0; i < nConnections; i++) {
@@ -512,11 +510,6 @@ void Model::defineObjectiveFunction() {
 
 void Model::solve() {
   model->optimize();
-
-  try {
-  } catch (GRBException e) {
-    std::cout << e.getMessage() << std::endl;
-  }
 }
 
 int Model::getStatus() {
@@ -567,7 +560,7 @@ void Model::printResults() {
 
   for (int i = 0; i < 6; i++) {
     string path = outputFile + arr[i] + "_" + to_string(inst) + ".txt";
-    files[i] = fopen(path.c_str(), "a");
+    files[i] = fopen(path.c_str(), "w");
 
     if (files[i] == nullptr) {
       puts("deu bosta");
@@ -584,9 +577,9 @@ void Model::printResults() {
     fprintf(files[obj], "%lf\n", model->get(GRB_DoubleAttr_ObjVal));
     fprintf(files[objb], "%lf\n", model->get(GRB_DoubleAttr_ObjBound));
     fprintf(files[runtime], "%lf\n", model->get(GRB_DoubleAttr_Runtime));
-    printXVariables(&files[vars]);
-    printYVariables(&files[vars]);
-    printIVariables(&files[vars]);
+//    printXVariables(&files[vars]);
+//    printYVariables(&files[vars]);
+//    printIVariables(&files[vars]);
 
     if (_type == linear_bigM) {
       printICVariables(&files[vars]);
@@ -620,9 +613,9 @@ double Model::getRuntime() {
 
 void Model::turnOffLogConsole(bool flag) {
   if (flag) {
-    model->set(GRB_IntParam_OutputFlag, 0);
+    model->set(GRB_IntParam_LogToConsole, 0);
   } else {
-    model->set(GRB_IntParam_OutputFlag, 1);
+    model->set(GRB_IntParam_LogToConsole, 1);
   }
 }
 
@@ -693,4 +686,8 @@ void Model::printIVariables(FILE **out) {
 
 void Model::printWVariables(FILE **out) {
 
+}
+
+void Model::writeGurobiOutSolution(const std::string path) {
+  model->write(path);
 }

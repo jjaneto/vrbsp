@@ -14,16 +14,16 @@ int main() {
 //  char file[100] = "./draft/CPLEX_BigM/src/instancias/U_8/U_8_1.txt";
 
   int l = 8;
-  bool teste = true;
+  bool teste = false;
   std::string file = "./draft/CPLEX_BigM/src/instancias/U_" + to_string(l) + "/U_" + to_string(l) + "_";
   std::string extensao = ".txt";
 
   vector<string> lines;
 
-  for (int i = 1; i <= 30; i++) {
+  for (int i = 1; i <= 1; i++) {
     Model *model;
     std::string arquivo = file + std::to_string(i) + extensao;
-    std::string saida = "results/";
+    std::string saida = "results/refactorVariables/";
 
     if (!teste) {
       saida += "L_" + to_string(l) + "/";
@@ -31,20 +31,24 @@ int main() {
       saida += "teste/L_" + to_string(l) + "/";
     }
 
-    int result = mkdir(saida.c_str(), 0755);
-    if (result < 0) {
-//      printf("criar diretorio: %s | out = %d\n", saida.c_str(), result);
-      if (errno != EEXIST) {
-        exit(EXIT_FAILURE);
-      }
-    }
+//    printf("saida %s\n", saida.c_str());
+//    int result = mkdir(saida.c_str(), 0755);
+//    if (result < 0) {
+////      printf("criar diretorio: %s | out = %d\n", saida.c_str(), result);
+//      if (errno != EEXIST) {
+//        printf("errno eh %d\n", errno);
+//        exit(EXIT_FAILURE);
+//      }
+//    }
 
     model = new Model(arquivo, Model::type::linear_bigM, i, saida);
 
-//    model->turnOffLogConsole(true);
+    model->turnOffLogConsole(true);
     model->setLogToMyDefaultFile();
     model->solve();
     model->printResults();
+    string w = saida + "outSol.sol";
+    model->writeGurobiOutSolution(w);
 
     char out[100];
     sprintf(out, "%.3lf %.3lf %.3lf %.3lf\n", model->getObjVal(), model->getObjBound(), model->getMIPGap(),

@@ -194,6 +194,8 @@ public:
 
     void printWVariables(FILE** out);
 
+    void writeGurobiOutSolution(const std::string path);
+
 };
 
 #endif //VRBSP_MODEL_H
