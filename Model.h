@@ -178,6 +178,8 @@ public:
 
     double getRuntime();
 
+    void writeGurobiOutSolution(const std::string path);
+
 };
 
 #endif //VRBSP_MODEL_H

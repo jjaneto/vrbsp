@@ -12,7 +12,7 @@ Model::Model(std::string file, type formulation, int number, std::string outputF
 
   if (file_ == nullptr) {
     fprintf(stderr, "Error opening file");
-    exit(1);
+    exit(47);
   }
 
   dataRates.assign(10, std::vector<double>(4, 0));//inicializa com zeros
@@ -620,4 +620,8 @@ double Model::getMIPGap() {
 
 double Model::getRuntime() {
   return model->get(GRB_DoubleAttr_Runtime);
+}
+
+void Model::writeGurobiOutSolution(const std::string path) {
+  model->write(path);
 }
