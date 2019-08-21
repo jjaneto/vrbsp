@@ -29,9 +29,9 @@ class Model {
 public:
 
     enum type {
-        nonlinear,
-        linearV1,
-        linear_bigM
+        nonLinear,
+        W,
+        bigM
     };
 
     Model(std::string file, type formulation);
@@ -195,6 +195,8 @@ public:
     void printWVariables(FILE** out);
 
     void writeGurobiOutSolution(const std::string path);
+
+    void setTimeLimit(double time);
 
 };
 

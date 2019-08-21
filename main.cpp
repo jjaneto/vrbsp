@@ -8,46 +8,87 @@
 #include <sys/types.h>
 #include "Model.h"
 
-int main() {
+struct instance {
+    int L;
+    int code;
+    double timeLimit;
+    Model::type tp;
+};
+
+void printLines(std::vector<std::string> lines) {
+  for (std::string s : lines) {
+    printf("%s\n", s.c_str());
+  }
+}
+
+std::string getTypeString(Model::type tp) {
+  std::string ret = "-1";
+  if (tp == Model::type::bigM) {
+    ret = "bigM";
+  } else if (tp == Model::type::W) {
+    ret = "W";
+  } else if (tp == Model::type::nonLinear) {
+    ret = "nonLinear";
+  }
+  return ret;
+}
+
+int main(int argc, char **argv) {
 
   using namespace std;
-//  char file[100] = "./draft/CPLEX_BigM/src/instancias/U_8/U_8_1.txt";
+  FILE *openFile = fopen(argv[1], "r");
 
-  int l = 8;
-  bool teste = false;
-  std::string file = "./draft/CPLEX_BigM/src/instancias/U_" + to_string(l) + "/U_" + to_string(l) + "_";
-  std::string extensao = ".txt";
+  if (openFile == NULL) {
+    fprintf(stderr, "Error during file opening. Closing program...\n");
+    exit(-1);
+  }
+
+  instance inst;
+  //
+  fscanf(openFile, "%d", &inst.L);
+  //
+  fscanf(openFile, "%d", &inst.code);
+  //
+  char type[15];
+  fscanf(openFile, "%s", type);
+  if (strcmp(type, "W") == 0) {
+    inst.tp = Model::type::W;
+  } else if (strcmp(type, "bigM") == 0) {
+    inst.tp = Model::type::bigM;
+  } else if (strcmp(type, "nonLinear") == 0) {
+    inst.tp = Model::type::nonLinear;
+  } else {
+    fprintf(stderr, "Error during type model reading (I've read %s). Closing program...\n", type);
+    exit(-1);
+  }
+  //
+  fscanf(openFile, "%lf", &inst.timeLimit);
+  //
+
+  int executionTimes;
+  fscanf(openFile, "%d", &executionTimes);
 
   vector<string> lines;
+  for (int i = 1; i <= executionTimes; i++) {
+    std::string file = "instancias/U_" + to_string(inst.L) + "/U_" + to_string(inst.L) + "_";
+    std::string extensao = ".txt";
 
-  for (int i = 1; i <= 1; i++) {
-    Model *model;
-    std::string arquivo = file + std::to_string(i) + extensao;
-    std::string saida = "results/refactorVariables/";
+    std::string arquivo = file + std::to_string(inst.code) + extensao;
+    std::string saida = "results/L_" + to_string(inst.L) + "/" + getTypeString(inst.tp) + "/";
 
-    if (!teste) {
-      saida += "L_" + to_string(l) + "/";
-    } else {
-      saida += "teste/L_" + to_string(l) + "/";
-    }
-
-//    printf("saida %s\n", saida.c_str());
-//    int result = mkdir(saida.c_str(), 0755);
-//    if (result < 0) {
-////      printf("criar diretorio: %s | out = %d\n", saida.c_str(), result);
-//      if (errno != EEXIST) {
-//        printf("errno eh %d\n", errno);
-//        exit(EXIT_FAILURE);
-//      }
-//    }
-
-    model = new Model(arquivo, Model::type::linear_bigM, i, saida);
+    Model *model = new Model(arquivo, inst.tp, i, saida);
 
     model->turnOffLogConsole(true);
     model->setLogToMyDefaultFile();
+    if (inst.timeLimit != -1.0) {
+      model->setTimeLimit(inst.timeLimit);
+    }
+
+
+
     model->solve();
     model->printResults();
-    string w = saida + "outSol.sol";
+    string w = saida + "outSol_" + to_string(i) + ".sol";
     model->writeGurobiOutSolution(w);
 
     char out[100];
@@ -57,11 +98,6 @@ int main() {
 
     delete model;
   }
-
-  for (string s : lines) {
-    cout << s;
-  }
-
 
   return 0;
 }

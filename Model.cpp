@@ -11,7 +11,7 @@ Model::Model(std::string file, type formulation, int number, std::string outputF
   inst = number;
 
   if (file_ == nullptr) {
-    fprintf(stderr, "Error opening file");
+    fprintf(stderr, "Error opening file: %s\n", file.c_str());
     exit(1);
   }
 
@@ -173,15 +173,15 @@ void Model::createDecisionVariables() {
   char varName[50];
   //variavel x
 //  for (int i = 0; i < nConnections; i++) {
+  //
+  for (int j = 0; j < nConnections; j++) {
     //
-    for (int j = 0; j < nConnections; j++) {
-      //
-      for (int c = 0; c < nChannels; c++) {
+    for (int c = 0; c < nChannels; c++) {
 
-        sprintf(varName, "X_[%d][%d][%d]", j, j, c);
-        x[j][c] = model->addVar(0.0, 1.0, 0.0, GRB_BINARY, varName);
-      }
+      sprintf(varName, "X_[%d][%d][%d]", j, j, c);
+      x[j][c] = model->addVar(0.0, 1.0, 0.0, GRB_BINARY, varName);
     }
+  }
 //  }
 
   //variavel y
@@ -223,7 +223,7 @@ void Model::createDecisionVariables() {
   }
 
 
-  if (_type == linear_bigM) {
+  if (_type == bigM) {
     //Variavel I_{ij}^{c}
     for (int i = 0; i < nConnections; i++) {
 //      for (int j = 0; j < nConnections; j++) {
@@ -235,7 +235,7 @@ void Model::createDecisionVariables() {
       }
 //      }
     }
-  } else if (_type == linearV1) {
+  } else if (_type == W) {
     try {
 //      for (int i = 0; i < nConnections; i++) {
       for (int j = 0; j < nConnections; j++) {
@@ -435,9 +435,9 @@ void Model::defineConstraintNine() {
 }
 
 void Model::defineConstraints() {
-  if (_type == nonlinear) {
+  if (_type == nonLinear) {
 
-  } else if (_type == linear_bigM) {
+  } else if (_type == bigM) {
     defineConstraintOne();
     defineConstraintTwo();
     defineConstraintThree();
@@ -445,7 +445,7 @@ void Model::defineConstraints() {
     defineConstraintFive();
     defineConstraintSix();
     defineConstraintSeven();
-  } else if (_type == linearV1) {
+  } else if (_type == W) {
     defineConstraintOne();
     defineConstraintTwo();
     defineConstraintThree();
@@ -581,10 +581,10 @@ void Model::printResults() {
 //    printYVariables(&files[vars]);
 //    printIVariables(&files[vars]);
 
-    if (_type == linear_bigM) {
+    if (_type == bigM) {
       printICVariables(&files[vars]);
       printZVariables(&files[vars]);
-    } else if (_type == linearV1) {
+    } else if (_type == W) {
       printWVariables(&files[vars]);
     }
   } catch (GRBException e) {
@@ -666,7 +666,8 @@ void Model::printZVariables(FILE **out) {
         for (int k = 0; k < nChannels; k++) {
           if (overlap[c][k] && x[i][k].get(GRB_DoubleAttr_X) > 0.0) {
             std::string outs_2 = "  -----> " +
-                    x[i][k].get(GRB_StringAttr_VarName) + ": " + std::to_string(x[i][k].get(GRB_DoubleAttr_X));
+                                 x[i][k].get(GRB_StringAttr_VarName) + ": " +
+                                 std::to_string(x[i][k].get(GRB_DoubleAttr_X));
 
             fprintf(*out, outs_2.c_str());
           }
@@ -690,4 +691,8 @@ void Model::printWVariables(FILE **out) {
 
 void Model::writeGurobiOutSolution(const std::string path) {
   model->write(path);
+}
+
+void Model::setTimeLimit(double time) {
+  model->set(GRB_DoubleParam_TimeLimit, time);
 }
