@@ -255,10 +255,8 @@ void Model::createDecisionVariables() {
       for (int j = 0; j < nConnections; j++) {
 
         for (int u = 0; u < nConnections; u++) {
-          for (int v = 0; v < nConnections; v++) {
-            sprintf(varName, "W_[%d][%d][%d][%d]", j, j, u, v);
+            sprintf(varName, "W_[%d][%d][%d][%d]", j, j, u, u);
             w[j][u] = model->addVar(0.0, 1.0, 0.0, GRB_CONTINUOUS, varName);
-          }
         }
       }
     } catch (GRBException ex) {
