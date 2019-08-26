@@ -7,13 +7,13 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -std=c++11 -g -D_GLIBCXX_USE_CXX11_ABI=0")
 
 # declara header gurobi directory
-set(GUROBI_INCLUDE_DIRECTORY "/Library/gurobi752/mac64/include")
+set(GUROBI_INCLUDE_DIRECTORY "~/Downloads/gurobi811/linux64/include")
 
 # adicionar header gurobi
 include_directories(${GUROBI_INCLUDE_DIRECTORY})
 
 # declara library gurobi directory
-set(GUROBI_LIB_DIRECTORY "/Library/gurobi752/mac64/lib/")
+set(GUROBI_LIB_DIRECTORY "~/Downloads/gurobi811/linux64/lib")
 
 # adicionar library gurobi
 link_directories(${GUROBI_LIB_DIRECTORY})
@@ -24,4 +24,4 @@ add_executable(vrbsp ${SOURCE_FILES})
 
 # adicionar libraries
 target_link_libraries (vrbsp gurobi_c++)
-target_link_libraries (vrbsp gurobi75)
+target_link_libraries (vrbsp gurobi81)

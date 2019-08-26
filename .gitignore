@@ -9,3 +9,7 @@ Makefile
 **/*.lp
 **/*.sol
 results/*
+instancias/**
+**/input
+**/oficials/
+**/._*
