@@ -9,3 +9,5 @@ Makefile
 **/*.lp
 **/*.sol
 results/*
+instancias/**
+**/input

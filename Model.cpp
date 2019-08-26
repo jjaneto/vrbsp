@@ -76,12 +76,29 @@ Model::Model(std::string file, type formulation, int number, std::string outputF
 
   createDecisionVariables();
   defineConstraints();
-  defineObjectiveFunction();
 
+  if (_type == bigM || _type == W) {
+    defineObjectiveFunction();
+  } else if (_type == bigM2 || _type == W2) {
+    defineObjectiveFunctionV2();
+  }
+
+  fclose(file_);
 }
 
 Model::~Model() {
 
+}
+
+inline int cToB(int c) {
+  if (c <= 25) {
+    return 0;
+  } else if (c <= 37) {
+    return 1;
+  } else if (c <= 43) {
+    return 2;
+  }
+  return 3;
 }
 
 void Model::generateInterferenceDistanceMatrix() { //TODO: Double check this function in order to remove erros
@@ -169,75 +186,72 @@ void Model::generateInterferenceDistanceMatrix() { //TODO: Double check this fun
 }
 
 void Model::createDecisionVariables() {
-
   char varName[50];
-  //variavel x
-//  for (int i = 0; i < nConnections; i++) {
-  //
-  for (int j = 0; j < nConnections; j++) {
-    //
-    for (int c = 0; c < nChannels; c++) {
 
-      sprintf(varName, "X_[%d][%d][%d]", j, j, c);
-      x[j][c] = model->addVar(0.0, 1.0, 0.0, GRB_BINARY, varName);
+  if (_type == W || _type == bigM) {
+    //variavel x
+    for (int j = 0; j < nConnections; j++) {
+      //
+      for (int c = 0; c < nChannels; c++) {
+
+        sprintf(varName, "X_[%d][%d][%d]", j, j, c);
+        x[j][c] = model->addVar(0.0, 1.0, 0.0, GRB_BINARY, varName);
+      }
     }
-  }
-//  }
 
-  //variavel y
-//  for (int i = 0; i < nConnections; i++) {
+    //variavel y
+    for (int j = 0; j < nConnections; j++) {
 
-  for (int j = 0; j < nConnections; j++) {
+      for (int b = 0; b < 4; b++) {
 
-    for (int b = 0; b < 4; b++) {
+        for (int d = 0; d < 10; d++) {
 
-      for (int d = 0; d < 10; d++) {
+          sprintf(varName, "Y_[%d][%d][%d][%d]", j, j, b, d);
+          y[j][b][d] = model->addVar(0.0, 1.0, 0.0, GRB_BINARY, varName);
+        }
+      }
+    }
+  } else if (_type == W2 || _type == bigM2) {
+    for (int i = 0; i < nConnections; i++) {
+      for (int c = 0; c < nChannels; c++) {
+//        nDataRates = (cToB(c) == 0 ? 9 : 10);
 
-        sprintf(varName, "Y_[%d][%d][%d][%d]", j, j, b, d);
-        y[j][b][d] = model->addVar(0.0, 1.0, 0.0, GRB_BINARY, varName);
+        nDataRates = 10;
+        for (int m = 0; m < nDataRates; m++) {
+          sprintf(varName, "X2_[%d][%d][%d][%d]", i, i, c, m);
+          xV2[i][c][m] = model->addVar(0.0, 1.0, 0.0, GRB_BINARY, varName);
+        }
       }
     }
   }
-//  }
 
   //variavel z
-//  for (int i = 0; i < nConnections; i++) {
-
   for (int j = 0; j < nConnections; j++) {
-
     for (int c = 0; c < nChannels; c++) {
-
       sprintf(varName, "Z_[%d][%d][%d]", j, j, c);
       z[j][c] = model->addVar(0.0, 1.0, 0.0, GRB_BINARY, varName);
     }
   }
-//  }
 
   //variavel I_{ij}
   for (int i = 0; i < nConnections; i++) {
-//    for (int j = 0; j < nConnections; j++) {
 
     sprintf(varName, "I_[%d][%d]", i, i);
     I[i] = model->addVar(0.0, GRB_INFINITY, 0.0, GRB_CONTINUOUS, varName);
-//    }
   }
 
-
-  if (_type == bigM) {
+  if (_type == bigM || _type == bigM2) {
     //Variavel I_{ij}^{c}
     for (int i = 0; i < nConnections; i++) {
-//      for (int j = 0; j < nConnections; j++) {
 
       for (int c = 0; c < nChannels; c++) {
 
         sprintf(varName, "IC_[%d][%d][%d]", i, i, c);
         IC[i][c] = model->addVar(0.0, GRB_INFINITY, 0.0, GRB_CONTINUOUS, varName);
       }
-//      }
     }
-  } else if (_type == W) {
+  } else if (_type == W || _type == W2) {
     try {
-//      for (int i = 0; i < nConnections; i++) {
       for (int j = 0; j < nConnections; j++) {
 
         for (int u = 0; u < nConnections; u++) {
@@ -247,25 +261,38 @@ void Model::createDecisionVariables() {
           }
         }
       }
-//      }
     } catch (GRBException ex) {
       std::cout << "epa " + ex.getMessage() << "\n";
     }
   }
-
-
 }
 
 void Model::defineConstraintOne() {
 
   for (int i = 0; i < nConnections; i++) {
 
-    GRBLinExpr expr1, expr2;
+    GRBLinExpr expr1;
 
     for (int c = 0; c < nChannels; c++) {
       expr1 += x[i][c];
     }
     model->addConstr(expr1 <= 1.0);
+  }
+}
+
+void Model::defineConstraintOneV2() {
+
+  for (int i = 0; i < nConnections; i++) {
+    GRBLinExpr expr1;
+
+    for (int c = 0; c < nChannels; c++) {
+      nDataRates = (cToB(c) == 0 ? 9 : 10);
+
+      for (int m = 0; m < nDataRates; m++) {
+        expr1 += xV2[i][c][m];
+      }
+      model->addConstr(expr1 <= 1.0);
+    }
   }
 }
 
@@ -336,6 +363,25 @@ void Model::defineConstraintThree() {
 
 }
 
+void Model::defineConstraintThreeV2() {
+
+  for (int i = 0; i < nConnections; i++) {
+
+    for (int c1 = 0; c1 < nChannels; c1++) {
+      GRBLinExpr expr;
+      for (int c2 = 0; c2 < nChannels; c2++) {
+
+        nDataRates = 10;
+        for (int m = 0; m < nDataRates; m++) {
+          if (overlap[c1][c2]) {
+            expr += xV2[i][c1][m];
+          }
+        }
+      }
+    }
+  }
+}
+
 void Model::defineConstraintFour() {
 
   for (int i = 0; i < nConnections; i++) {
@@ -368,6 +414,22 @@ void Model::defineConstraintFive() {
 
 }
 
+void Model::defineConstraintFiveV2() {
+  for (int i = 0; i < nConnections; i++) {
+    for (int c = 0; c < nChannels; c++) {
+      nDataRates = (cToB(c) == 0 ? 9 : 10);
+
+      for (int m = 0; m < nDataRates; m++) {
+        GRBLinExpr expr;
+
+        expr = IC[i][c] - M_ij[i] * (1 - xV2[i][c][m]);
+
+        model->addConstr(I[i] >= expr);
+      }
+    }
+  }
+}
+
 void Model::defineConstraintSix() {
 
   for (int i = 0; i < nConnections; i++) {
@@ -378,6 +440,22 @@ void Model::defineConstraintSix() {
       expr = IC[i][c] + M_ij[i] * (1 - x[i][c]);
 
       model->addConstr(I[i] <= expr);
+    }
+  }
+}
+
+void Model::defineConstraintSixV2() {
+  for (int i = 0; i < nConnections; i++) {
+    for (int c = 0; c < nChannels; c++) {
+      nDataRates = (cToB(c) == 0 ? 9 : 10);
+
+      for (int m = 0; m < nDataRates; m++) {
+        GRBLinExpr expr;
+
+        expr = IC[i][c] + M_ij[i] * (1 - xV2[i][c][m]);
+
+        model->addConstr(I[i] <= expr);
+      }
     }
   }
 }
@@ -404,6 +482,21 @@ void Model::defineConstraintSeven() {
   }
 }
 
+void Model::defineConstraintSevenV2() {
+  for (int i = 0; i < nConnections; i++) {
+    GRBLinExpr expr;
+
+    for (int c = 0; c < nChannels; c++) {
+      nDataRates = (cToB(c) == 0 ? 9 : 10);
+
+      for (int s = 0; s < nDataRates; s++) {
+
+        expr += ((connections[i].powerSR / SINR[s][cToB(c)]) - noise) * xV2[i][c][s];
+      }
+    }
+  }
+}
+
 void Model::defineConstraintEight() {
   for (int i = 0; i < nConnections; i++) {
 
@@ -411,6 +504,24 @@ void Model::defineConstraintEight() {
       for (int c = 0; c < nChannels; c++) {
         if (i != u) {
           model->addConstr(w[u][u] >= x[i][c] + z[u][c] - 1);
+        }
+      }
+    }
+  }
+}
+
+void Model::defineConstraintEightV2() {
+  for (int i = 0; i < nConnections; i++) {
+
+    for (int u = 0; u < nConnections; u++) {
+      for (int c = 0; c < nChannels; c++) {
+
+        nDataRates = (cToB(c) == 0 ? 9 : 10);
+
+        for (int m = 0; m < nDataRates; m++) {
+          if (i != u) {
+            model->addConstr(w[u][u] >= xV2[i][c][m] + z[u][c] - 1);
+          }
         }
       }
     }
@@ -452,9 +563,21 @@ void Model::defineConstraints() {
     defineConstraintSeven();
     defineConstraintEight();
     defineConstraintNine();
+  } else if (_type == W2) {
+    defineConstraintOneV2();
+    defineConstraintThreeV2();
+    defineConstraintSevenV2();
+    defineConstraintEightV2();
+    defineConstraintNine();
+  } else if (_type == bigM2) {
+    defineConstraintOneV2();
+    defineConstraintThreeV2();
+    defineConstraintFour();
+    defineConstraintFiveV2();
+    defineConstraintSixV2();
+    defineConstraintSevenV2();
   }
 }
-
 
 void Model::createBigM() {
 
@@ -480,24 +603,16 @@ inline double Model::computeInterference(double c) {
 void Model::defineObjectiveFunction() {
   GRBLinExpr function;
 
-//  for (int i = 0; i < nConnections; i++) {
-
   for (int j = 0; j < nConnections; j++) {
 
     for (int b = 0; b < 4; b++) {
 
       for (int s = 0; s < 10; s++) {
 
-//          if (i == j) {
         function += dataRates[s][b] * y[j][b][s];
-//          } else {
-//            function += 0 * y[j][b][s];
-//          }
       }
     }
   }
-//  }
-
 
   try {
     model->setObjective(function, GRB_MAXIMIZE);
@@ -508,7 +623,30 @@ void Model::defineObjectiveFunction() {
   }
 }
 
+void Model::defineObjectiveFunctionV2() {
+  try {
+    GRBLinExpr function;
+
+    for (int i = 0; i < nConnections; i++) {
+      for (int c = 0; c < nChannels; c++) {
+        nDataRates = 10;
+        for (int m = 0; m < nDataRates; m++) {
+          function += dataRates[m][cToB(c)] * xV2[i][c][m];
+        }
+      }
+    }
+
+    model->setObjective(function, GRB_MAXIMIZE);
+  } catch (GRBException e) {
+    puts("Error in objective function");
+    std::cout << e.getErrorCode() << std::endl;
+    std::cout << e.getMessage() << std::endl;
+    exit(30);
+  }
+}
+
 void Model::solve() {
+  puts("yeah!");
   model->optimize();
 }
 
@@ -553,12 +691,13 @@ void Model::printResults() {
   using namespace std;
   vector<std::string> rows;
 
+  const int nFiles = 5;
   int opt = 0, gap = 1, obj = 2, objb = 3, runtime = 4, vars = 5;
-  FILE *files[6];
+  FILE *files[nFiles];
 
   string arr[] = {"opt", "gap", "obj", "objb", "runtime", "vars"};
 
-  for (int i = 0; i < 6; i++) {
+  for (int i = 0; i < nFiles; i++) {
     string path = outputFile + arr[i] + "_" + to_string(inst) + ".txt";
     files[i] = fopen(path.c_str(), "w");
 
@@ -581,17 +720,17 @@ void Model::printResults() {
 //    printYVariables(&files[vars]);
 //    printIVariables(&files[vars]);
 
-    if (_type == bigM) {
-      printICVariables(&files[vars]);
-      printZVariables(&files[vars]);
-    } else if (_type == W) {
-      printWVariables(&files[vars]);
-    }
+//    if (_type == bigM) {
+//      printICVariables(&files[vars]);
+//      printZVariables(&files[vars]);
+//    } else if (_type == W) {
+//      printWVariables(&files[vars]);
+//    }
   } catch (GRBException e) {
     std::cout << e.getMessage() << std::endl;
   }
 
-  for (int i = 0; i < 6; i++)
+  for (int i = 0; i < nFiles; i++)
     fclose(files[i]);
 }
 

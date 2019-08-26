@@ -29,11 +29,19 @@ std::string getTypeString(Model::type tp) {
     ret = "W";
   } else if (tp == Model::type::nonLinear) {
     ret = "nonLinear";
+  } else if (tp == Model::type::bigM2) {
+    ret = "bigM2";
+  } else if (tp == Model::type::W2) {
+    ret = "W2";
   }
   return ret;
 }
 
 int main(int argc, char **argv) {
+
+#ifdef TESTE
+  puts("adas");
+#endif
 
   using namespace std;
   FILE *openFile = fopen(argv[1], "r");
@@ -57,7 +65,11 @@ int main(int argc, char **argv) {
     inst.tp = Model::type::bigM;
   } else if (strcmp(type, "nonLinear") == 0) {
     inst.tp = Model::type::nonLinear;
-  } else {
+  } else if (strcmp(type, "W2") == 0) {
+    inst.tp = Model::type::W2;
+  } else if (strcmp(type, "bigM2") == 0) {
+    inst.tp = Model::type::bigM2;
+  }else {
     fprintf(stderr, "Error during type model reading (I've read %s). Closing program...\n", type);
     exit(-1);
   }
@@ -68,33 +80,35 @@ int main(int argc, char **argv) {
   int executionTimes;
   fscanf(openFile, "%d", &executionTimes);
 
+  if (executionTimes > 30)
+    executionTimes = 30;
+
   vector<string> lines;
   for (int i = 1; i <= executionTimes; i++) {
     std::string file = "instancias/U_" + to_string(inst.L) + "/U_" + to_string(inst.L) + "_";
     std::string extensao = ".txt";
 
-    std::string arquivo = file + std::to_string(inst.code) + extensao;
-    std::string saida = "results/L_" + to_string(inst.L) + "/" + getTypeString(inst.tp) + "/";
+    std::string entrada = file + std::to_string(inst.code) + extensao;
+    std::string saida = "results/" + getTypeString(inst.tp) + "/L_" + to_string(inst.L) + "/";
 
-    Model *model = new Model(arquivo, inst.tp, i, saida);
+    Model *model = new Model(entrada, inst.tp, i, saida);
 
-    model->turnOffLogConsole(true);
+//    model->turnOffLogConsole(true);
     model->setLogToMyDefaultFile();
     if (inst.timeLimit != -1.0) {
       model->setTimeLimit(inst.timeLimit);
     }
 
-
-
+    printf("Otimizando entrada %s\n", entrada.c_str());
     model->solve();
     model->printResults();
     string w = saida + "outSol_" + to_string(i) + ".sol";
     model->writeGurobiOutSolution(w);
 
-    char out[100];
-    sprintf(out, "%.3lf %.3lf %.3lf %.3lf\n", model->getObjVal(), model->getObjBound(), model->getMIPGap(),
-            model->getRuntime());
-    lines.push_back(string(out));
+//    char out[100];
+//    sprintf(out, "%.3lf %.3lf %.3lf %.3lf\n", model->getObjVal(), model->getObjBound(), model->getMIPGap(),
+//            model->getRuntime());
+//    lines.push_back(string(out));
 
     delete model;
   }

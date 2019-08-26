@@ -31,7 +31,9 @@ public:
     enum type {
         nonLinear,
         W,
-        bigM
+        W2,
+        bigM,
+        bigM2
     };
 
     Model(std::string file, type formulation);
@@ -100,7 +102,7 @@ public:
 
     GRBEnv *env;
     GRBModel *model;
-    GRBVar x[515][50], y[515][4][10], z[515][45], I[515], IC[515][45], w[512][512];
+    GRBVar x[512][512], y[512][4][10], z[515][45], I[515], IC[515][45], w[512][512], xV2[512][50][12];
     GRBLinExpr objectiveFunction;
     std::vector<GRBLinExpr *> constraints;
 
@@ -120,6 +122,8 @@ public:
 
     void defineObjectiveFunction();
 
+    void defineObjectiveFunctionV2();
+
     void defineConstraints();
 
     void generateInterferenceDistanceMatrix();
@@ -138,29 +142,33 @@ public:
 
     void defineConstraintOne();
 
+    void defineConstraintOneV2();
+
     void defineConstraintTwo();
 
     void defineConstraintThree();
+
+    void defineConstraintThreeV2();
 
     void defineConstraintFour();
 
     void defineConstraintFive();
 
+    void defineConstraintFiveV2();
+
     void defineConstraintSix();
+
+    void defineConstraintSixV2();
 
     void defineConstraintSeven();
 
+    void defineConstraintSevenV2();
+
     void defineConstraintEight();
 
+    void defineConstraintEightV2();
+
     void defineConstraintNine();
-
-    void defineConstraintTen();
-
-    void defineConstraintEleven();
-
-    void defineConstraintTwelve();
-
-    void defineConstraintThirteen();
 
     int getStatus();
 
