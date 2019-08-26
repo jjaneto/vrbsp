@@ -724,8 +724,8 @@ void Model::printResults() {
 //    } else if (_type == W) {
 //      printWVariables(&files[vars]);
 //    }
-    fprintf(files[nonZeros], "%lf\n", model->get(GRB_IntAttr_NumNZs));
-    fprintf(files[nConst], "%lf\n", model->get(GRB_IntAttr_NumConstrs));
+    fprintf(files[nonZeros], "%d\n", model->get(GRB_IntAttr_NumNZs));
+    fprintf(files[nConst], "%d\n", model->get(GRB_IntAttr_NumConstrs));
   } catch (GRBException e) {
     std::cout << e.getMessage() << std::endl;
   }
