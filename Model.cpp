@@ -646,7 +646,7 @@ void Model::defineObjectiveFunctionV2() {
 }
 
 void Model::solve() {
-  puts("yeah!");
+  puts("Starting Optimization...");
   model->optimize();
 }
 
@@ -691,14 +691,14 @@ void Model::printResults() {
   using namespace std;
   vector<std::string> rows;
 
-  const int nFiles = 5;
-  int opt = 0, gap = 1, obj = 2, objb = 3, runtime = 4, vars = 5;
+  const int nFiles = 7;
+  int opt = 0, gap = 1, obj = 2, objb = 3, runtime = 4, nonZeros = 5, nConst = 6;
   FILE *files[nFiles];
 
-  string arr[] = {"opt", "gap", "obj", "objb", "runtime", "vars"};
+  string nameFiles[] = {"opt", "gap", "obj", "objb", "runtime", "nonZeros", "nConst"};
 
   for (int i = 0; i < nFiles; i++) {
-    string path = outputFile + arr[i] + "_" + to_string(inst) + ".txt";
+    string path = outputFile + nameFiles[i] + "_" + to_string(inst) + ".txt";
     files[i] = fopen(path.c_str(), "w");
 
     if (files[i] == nullptr) {
@@ -716,16 +716,8 @@ void Model::printResults() {
     fprintf(files[obj], "%lf\n", model->get(GRB_DoubleAttr_ObjVal));
     fprintf(files[objb], "%lf\n", model->get(GRB_DoubleAttr_ObjBound));
     fprintf(files[runtime], "%lf\n", model->get(GRB_DoubleAttr_Runtime));
-//    printXVariables(&files[vars]);
-//    printYVariables(&files[vars]);
-//    printIVariables(&files[vars]);
-
-//    if (_type == bigM) {
-//      printICVariables(&files[vars]);
-//      printZVariables(&files[vars]);
-//    } else if (_type == W) {
-//      printWVariables(&files[vars]);
-//    }
+    fprintf(files[nonZeros], "%lf\n", model->get(GRB_IntAttr_NumNZs));
+    fprintf(files[nConst], "%lf\n", model->get(GRB_IntAttr_NumConstrs));
   } catch (GRBException e) {
     std::cout << e.getMessage() << std::endl;
   }
@@ -762,6 +754,7 @@ void Model::setLogToMyDefaultFile() {
   model->set(GRB_StringParam_LogFile, outputFile + "gurobiOUT_" + std::to_string(inst) + ".txt");
 }
 
+//<editor-fold desc="Print variables">
 void Model::printXVariables(FILE **out) {
   fprintf(*out, "==== X VARIABLES ====\n");
   for (int i = 0; i < nConnections; i++) {
@@ -827,6 +820,7 @@ void Model::printIVariables(FILE **out) {
 void Model::printWVariables(FILE **out) {
 
 }
+//</editor-fold>
 
 void Model::writeGurobiOutSolution(const std::string path) {
   model->write(path);
