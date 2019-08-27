@@ -71,16 +71,22 @@ Model::Model(std::string file, type formulation, int number, std::string outputF
 //
   createBigM();
 //
-  env = new GRBEnv();
-  model = new GRBModel(*env);
 
-  createDecisionVariables();
-  defineConstraints();
+  try {
+    env = new GRBEnv();
+    model = new GRBModel(*env);
 
-  if (_type == bigM || _type == W) {
-    defineObjectiveFunction();
-  } else if (_type == bigM2 || _type == W2) {
-    defineObjectiveFunctionV2();
+    createDecisionVariables();
+    defineConstraints();
+
+    if (_type == bigM || _type == W) {
+      defineObjectiveFunction();
+    } else if (_type == bigM2 || _type == W2) {
+      defineObjectiveFunctionV2();
+    }
+  } catch (GRBException ex) {
+    std::cout << ex.getMessage() << std::endl;
+    std::cout << ex.getErrorCode() << std::endl;
   }
 
   fclose(file_);
@@ -255,8 +261,8 @@ void Model::createDecisionVariables() {
       for (int j = 0; j < nConnections; j++) {
 
         for (int u = 0; u < nConnections; u++) {
-            sprintf(varName, "W_[%d][%d][%d][%d]", j, j, u, u);
-            w[j][u] = model->addVar(0.0, 1.0, 0.0, GRB_CONTINUOUS, varName);
+          sprintf(varName, "W_[%d][%d][%d][%d]", j, j, u, u);
+          w[j][u] = model->addVar(0.0, 1.0, 0.0, GRB_CONTINUOUS, varName);
         }
       }
     } catch (GRBException ex) {
