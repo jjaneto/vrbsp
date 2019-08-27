@@ -372,10 +372,11 @@ void Model::defineConstraintThreeV2() {
         nDataRates = 10;
         for (int m = 0; m < nDataRates; m++) {
           if (overlap[c1][c2]) {
-            expr += xV2[i][c1][m];
+            expr += xV2[i][c2][m];
           }
         }
       }
+      model->addConstr(expr == z[i][c1]);
     }
   }
 }
@@ -492,6 +493,7 @@ void Model::defineConstraintSevenV2() {
         expr += ((connections[i].powerSR / SINR[s][cToB(c)]) - noise) * xV2[i][c][s];
       }
     }
+    model->addConstr(expr >= I[i]);
   }
 }
 
