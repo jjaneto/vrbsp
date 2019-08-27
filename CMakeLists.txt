@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -std=c++11 -g -D_GLIBCXX_USE_CXX11_ABI=0")
 
 # declara header gurobi directory
-if (LINUX)
+if ("${CMAKE_SYSTEM}" MATCHES "Linux")
   set(GUROBI_INCLUDE_DIRECTORY "~/Downloads/gurobi811/linux64/include")
 elseif (APPLE)
   set(GUROBI_INCLUDE_DIRECTORY "/Library/gurobi811/mac64/include")
@@ -17,7 +17,7 @@ endif ()
 include_directories(${GUROBI_INCLUDE_DIRECTORY})
 
 # declara library gurobi directory
-if (LINUX)
+if ("${CMAKE_SYSTEM}" MATCHES "Linux")
   set(GUROBI_LIB_DIRECTORY "~/Downloads/gurobi811/linux64/lib")
 elseif (APPLE)
   set(GUROBI_LIB_DIRECTORY "/Library/gurobi811/mac64/lib/")
