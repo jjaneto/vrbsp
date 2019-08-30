@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
     std::string entrada = file + std::to_string(inst.code + i) + extensao;
     std::string saida = "results/" + getTypeString(inst.tp) + "/L_" + to_string(inst.L) + "/";
 
-    Model *model = new Model(entrada, inst.tp, i, saida);
+    Model *model = new Model(entrada, inst.tp, inst.code + i, saida);
 
     model->turnOffLogConsole(true);
     model->setLogToMyDefaultFile();
@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
     printf("Otimizando entrada %s\n", entrada.c_str());
     model->solve();
     model->printResults();
-    string w = saida + "outSol_" + to_string(i) + ".sol";
+    string w = saida + "outSol_" + to_string(inst.code + i) + ".sol";
     model->writeGurobiOutSolution(w);
 
 //    char out[100];
