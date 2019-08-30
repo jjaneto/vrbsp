@@ -80,18 +80,22 @@ int main(int argc, char **argv) {
   int executionTimes;
   fscanf(openFile, "%d", &executionTimes);
 
-  if (executionTimes > 30)
+  if (executionTimes > 30) {
+    puts("Read more than 30 executions. Setting execution times to 30...");
     executionTimes = 30;
+  }
 
   vector<string> lines;
-  for (int i = 1; i <= executionTimes; i++) {
+  for (int i = 0; i < executionTimes; i++) {
+    int INSTANCE_TO_BE_EXECUTED = inst.code + i;
+
     std::string file = "instancias/U_" + to_string(inst.L) + "/U_" + to_string(inst.L) + "_";
     std::string extensao = ".txt";
 
-    std::string entrada = file + std::to_string(inst.code + i) + extensao;
+    std::string entrada = file + std::to_string(INSTANCE_TO_BE_EXECUTED) + extensao;
     std::string saida = "results/" + getTypeString(inst.tp) + "/L_" + to_string(inst.L) + "/";
 
-    Model *model = new Model(entrada, inst.tp, inst.code + i, saida);
+    Model *model = new Model(entrada, inst.tp, INSTANCE_TO_BE_EXECUTED, saida);
 
     model->turnOffLogConsole(true);
     model->setLogToMyDefaultFile();
@@ -102,7 +106,7 @@ int main(int argc, char **argv) {
     printf("Otimizando entrada %s\n", entrada.c_str());
     model->solve();
     model->printResults();
-    string w = saida + "outSol_" + to_string(inst.code + i) + ".sol";
+    string w = saida + "outSol_" + to_string(INSTANCE_TO_BE_EXECUTED) + ".sol";
     model->writeGurobiOutSolution(w);
 
 //    char out[100];
