@@ -55,8 +55,6 @@ int main(int argc, char **argv) {
   //
   fscanf(openFile, "%d", &inst.L);
   //
-  fscanf(openFile, "%d", &inst.code);
-  //
   char type[15];
   fscanf(openFile, "%s", type);
   if (strcmp(type, "W") == 0) {
@@ -76,26 +74,19 @@ int main(int argc, char **argv) {
   //
   fscanf(openFile, "%lf", &inst.timeLimit);
   //
-
-  int executionTimes;
-  fscanf(openFile, "%d", &executionTimes);
-
-  if (executionTimes > 30) {
-    puts("Read more than 30 executions. Setting execution times to 30...");
-    executionTimes = 30;
-  }
+  int run;
+  fscanf(openFile, "%d", &run);
 
   vector<string> lines;
-  for (int i = 0; i < executionTimes; i++) {
-    int INSTANCE_TO_BE_EXECUTED = inst.code + i;
+//  for (int i = begin; i <= end; i++) {
 
     std::string file = "instancias/U_" + to_string(inst.L) + "/U_" + to_string(inst.L) + "_";
     std::string extensao = ".txt";
 
-    std::string entrada = file + std::to_string(INSTANCE_TO_BE_EXECUTED) + extensao;
+    std::string entrada = file + std::to_string(run) + extensao;
     std::string saida = "results/" + getTypeString(inst.tp) + "/L_" + to_string(inst.L) + "/";
 
-    Model *model = new Model(entrada, inst.tp, INSTANCE_TO_BE_EXECUTED, saida);
+    Model *model = new Model(entrada, inst.tp, run, saida);
 
     model->turnOffLogConsole(true);
     model->setLogToMyDefaultFile();
@@ -106,7 +97,7 @@ int main(int argc, char **argv) {
     printf("Otimizando entrada %s\n", entrada.c_str());
     model->solve();
     model->printResults();
-    string w = saida + "outSol_" + to_string(INSTANCE_TO_BE_EXECUTED) + ".sol";
+    string w = saida + "outSol_" + to_string(run) + ".sol";
     model->writeGurobiOutSolution(w);
 
 //    char out[100];
@@ -115,7 +106,7 @@ int main(int argc, char **argv) {
 //    lines.push_back(string(out));
 
     delete model;
-  }
+//  }
 
   return 0;
 }

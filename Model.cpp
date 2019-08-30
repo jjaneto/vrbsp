@@ -8,7 +8,7 @@ Model::Model(std::string file, type formulation, int number, std::string outputF
   FILE *file_ = fopen(file.c_str(), "r");
 
   this->outputFile = outputFile;
-  inst = number;
+  run = number;
 
   if (file_ == nullptr) {
     fprintf(stderr, "Error opening file: %s\n", file.c_str());
@@ -704,7 +704,7 @@ void Model::printResults() {
   string nameFiles[] = {"opt", "gap", "obj", "objb", "runtime", "nonZeros", "nConst"};
 
   for (int i = 0; i < nFiles; i++) {
-    string path = outputFile + nameFiles[i] + "_" + to_string(inst) + ".txt";
+    string path = outputFile + nameFiles[i] + "_" + to_string(run) + ".txt";
     files[i] = fopen(path.c_str(), "w");
 
     if (files[i] == nullptr) {
@@ -767,7 +767,8 @@ void Model::turnOffLogConsole(bool flag) {
 }
 
 void Model::setLogToMyDefaultFile() {
-  model->set(GRB_StringParam_LogFile, outputFile + "gurobiOUT_" + std::to_string(inst) + ".txt");
+  printf("Saving Gurobi Output in %sgurobiOUT_%d.txt\n", outputFile.c_str(), run);
+  model->set(GRB_StringParam_LogFile, outputFile + "gurobiOUT_" + std::to_string(run) + ".txt");
 }
 
 //<editor-fold desc="Print variables">

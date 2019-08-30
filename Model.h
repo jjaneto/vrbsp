@@ -42,7 +42,7 @@ public:
 
     ~Model();
 
-    int inst;
+    int run;
     int nDecisionVariables;
     int nConstraints;
     int nConnections;
