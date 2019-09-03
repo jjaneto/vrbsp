@@ -5,7 +5,7 @@ timeLimit=3600
 formulation="W2"
 begin=1
 end=1
-area="D1000x1000"
+area="D250x250"
 
 for ((i=begin; i<=end; i++)) do
   {

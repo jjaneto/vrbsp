@@ -86,11 +86,11 @@ int main(int argc, char **argv) {
   vector<string> lines;
 //  for (int i = begin; i <= end; i++) {
 
-    std::string file = "instancias/U_" + to_string(inst.L) + "/U_" + to_string(inst.L) + "_";
+    std::string file = "instancias/" + inst.area +"/U_" + to_string(inst.L) + "/U_" + to_string(inst.L) + "_";
     std::string extensao = ".txt";
 
     std::string entrada = file + std::to_string(run) + extensao;
-    std::string saida = "results/" + getTypeString(inst.tp) + "/L_" + to_string(inst.L) + "/";
+    std::string saida = "results/" + inst.area + "/" + getTypeString(inst.tp) + "/L_" + to_string(inst.L) + "/";
 
     Model *model = new Model(entrada, inst.tp, run, saida);
 
