@@ -12,6 +12,7 @@ struct instance {
     int L;
     int code;
     double timeLimit;
+    std::string area;
     Model::type tp;
 };
 
@@ -39,10 +40,6 @@ std::string getTypeString(Model::type tp) {
 
 int main(int argc, char **argv) {
 
-#ifdef TESTE
-  puts("adas");
-#endif
-
   using namespace std;
   FILE *openFile = fopen(argv[1], "r");
 
@@ -54,6 +51,15 @@ int main(int argc, char **argv) {
   instance inst;
   //
   fscanf(openFile, "%d", &inst.L);
+  //
+  char area[15];
+  fscanf(openFile, "%s", area);
+  if (!strcmp(area, "D250x250") || !strcmp(area, "D10000x10000")) {
+    inst.area = string(area);
+  } else {
+    fprintf(stderr, "Error during area reading (I've read %s). Closing program...\n", area);
+    exit(-1);
+  }
   //
   char type[15];
   fscanf(openFile, "%s", type);
