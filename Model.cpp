@@ -768,7 +768,12 @@ void Model::turnOffLogConsole(bool flag) {
 
 void Model::setLogToMyDefaultFile() {
   printf("Saving Gurobi Output in %sgurobiOUT_%d.txt\n", outputFile.c_str(), run);
-  model->set(GRB_StringParam_LogFile, outputFile + "gurobiOUT_" + std::to_string(run) + ".txt");
+  try {
+    model->set(GRB_StringParam_LogFile, outputFile + "gurobiOUT_" + std::to_string(run) + ".txt");
+  } catch (GRBException ex) {
+    std::cout << ex.getErrorCode() << std::endl;
+    std::cout << ex.getMessage() << std::endl;
+  }
 }
 
 //<editor-fold desc="Print variables">

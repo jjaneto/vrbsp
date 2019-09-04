@@ -54,6 +54,7 @@ int main(int argc, char **argv) {
   //
   char area[15];
   fscanf(openFile, "%s", area);
+  printf("%s\n", area);
   if (!strcmp(area, "D250x250") || !strcmp(area, "D10000x10000")) {
     inst.area = string(area);
   } else {

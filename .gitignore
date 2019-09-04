@@ -15,3 +15,4 @@ instancias/**
 **/._*
 **/vrbsp
 **/Makefile
+out*_*

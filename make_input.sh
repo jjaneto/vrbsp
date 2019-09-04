@@ -2,7 +2,7 @@
 
 instance=8
 timeLimit=3600
-formulation="W2"
+formulation="bigM2"
 begin=1
 end=1
 area="D250x250"
