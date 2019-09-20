@@ -509,7 +509,7 @@ void Model::defineConstraintEight() {
     for (int u = 0; u < nConnections; u++) {
       for (int c = 0; c < nChannels; c++) {
         if (i != u) {
-          model->addConstr(w[u][u] >= x[i][c] + z[u][c] - 1);
+          model->addConstr(w[i][u] >= x[i][c] + z[u][c] - 1);
         }
       }
     }
@@ -526,7 +526,7 @@ void Model::defineConstraintEightV2() {
 
         for (int m = 0; m < nDataRates; m++) {
           if (i != u) {
-            model->addConstr(w[u][u] >= xV2[i][c][m] + z[u][c] - 1);
+            model->addConstr(w[i][u] >= xV2[i][c][m] + z[u][c] - 1);
           }
         }
       }
@@ -542,7 +542,7 @@ void Model::defineConstraintNine() {
 
       for (int u = 0; u < nConnections; u++) {
         if (u != i) {
-          expr += interferenceMatrix[i][u] * w[u][u];
+          expr += interferenceMatrix[i][u] * w[i][u];
         }
       }
 
