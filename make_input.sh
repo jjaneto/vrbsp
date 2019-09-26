@@ -2,10 +2,10 @@
 
 instance=8
 timeLimit=3600
-formulation="bigM2"
+formulation="W2"
 begin=1
 end=1
-area="D250x250"
+area="D10000x10000"
 
 for ((i=begin; i<=end; i++)) do
   {

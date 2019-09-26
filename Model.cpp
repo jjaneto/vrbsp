@@ -777,59 +777,59 @@ void Model::setLogToMyDefaultFile() {
 }
 
 //<editor-fold desc="Print variables">
-void Model::printXVariables(FILE **out) {
-  fprintf(*out, "==== X VARIABLES ====\n");
-  for (int i = 0; i < nConnections; i++) {
-    for (int c = 0; c < nChannels; c++) {
-      if (x[i][c].get(GRB_DoubleAttr_X) > 0.0) {
-        std::string outs_ =
-                x[i][c].get(GRB_StringAttr_VarName) + ": " + std::to_string(x[i][c].get(GRB_DoubleAttr_X)) + "\n";
-        fprintf(*out, outs_.c_str());
-      }
-    }
-  }
-}
-
-void Model::printYVariables(FILE **out) {
-  fprintf(*out, "==== Y VARIABLES ====\n");
-  for (int i = 0; i < nConnections; i++) {
-    for (int b = 0; b < 10; b++) {
-      int dataRates = (b == 0) ? 9 : 10;
-
-      for (int s = 0; s < dataRates; s++) {
-        if (y[i][b][s].get(GRB_DoubleAttr_X) > 0.0) {
-          std::string outs_ =
-                  y[i][b][s].get(GRB_StringAttr_VarName) + ": " + std::to_string(y[i][b][s].get(GRB_DoubleAttr_X)) +
-                  "\n";
-          fprintf(*out, outs_.c_str());
-        }
-      }
-    }
-  }
-}
-
-void Model::printZVariables(FILE **out) {
-  fprintf(*out, "==== Z VARIABLES ====\n");
-  for (int i = 0; i < nConnections; i++) {
-    for (int c = 0; c < nChannels; c++) {
-      if (z[i][c].get(GRB_DoubleAttr_X) > 0.0) {
-        std::string outs_ =
-                z[i][c].get(GRB_StringAttr_VarName) + ": " + std::to_string(z[i][c].get(GRB_DoubleAttr_X)) + "\n";
-        fprintf(*out, outs_.c_str());
-
-        for (int k = 0; k < nChannels; k++) {
-          if (overlap[c][k] && x[i][k].get(GRB_DoubleAttr_X) > 0.0) {
-            std::string outs_2 = "  -----> " +
-                                 x[i][k].get(GRB_StringAttr_VarName) + ": " +
-                                 std::to_string(x[i][k].get(GRB_DoubleAttr_X));
-
-            fprintf(*out, outs_2.c_str());
-          }
-        }
-      }
-    }
-  }
-}
+//void Model::printXVariables(FILE **out) {
+//  fprintf(*out, "==== X VARIABLES ====\n");
+//  for (int i = 0; i < nConnections; i++) {
+//    for (int c = 0; c < nChannels; c++) {
+//      if (x[i][c].get(GRB_DoubleAttr_X) > 0.0) {
+//        std::string outs_ =
+//                x[i][c].get(GRB_StringAttr_VarName) + ": " + std::to_string(x[i][c].get(GRB_DoubleAttr_X)) + "\n";
+//        fprintf(*out, outs_.c_str());
+//      }
+//    }
+//  }
+//}
+//
+//void Model::printYVariables(FILE **out) {
+//  fprintf(*out, "==== Y VARIABLES ====\n");
+//  for (int i = 0; i < nConnections; i++) {
+//    for (int b = 0; b < 10; b++) {
+//      int dataRates = (b == 0) ? 9 : 10;
+//
+//      for (int s = 0; s < dataRates; s++) {
+//        if (y[i][b][s].get(GRB_DoubleAttr_X) > 0.0) {
+//          std::string outs_ =
+//                  y[i][b][s].get(GRB_StringAttr_VarName) + ": " + std::to_string(y[i][b][s].get(GRB_DoubleAttr_X)) +
+//                  "\n";
+//          fprintf(*out, outs_.c_str());
+//        }
+//      }
+//    }
+//  }
+//}
+//
+//void Model::printZVariables(FILE **out) {
+//  fprintf(*out, "==== Z VARIABLES ====\n");
+//  for (int i = 0; i < nConnections; i++) {
+//    for (int c = 0; c < nChannels; c++) {
+//      if (z[i][c].get(GRB_DoubleAttr_X) > 0.0) {
+//        std::string outs_ =
+//                z[i][c].get(GRB_StringAttr_VarName) + ": " + std::to_string(z[i][c].get(GRB_DoubleAttr_X)) + "\n";
+//        fprintf(*out, outs_.c_str());
+//
+//        for (int k = 0; k < nChannels; k++) {
+//          if (overlap[c][k] && x[i][k].get(GRB_DoubleAttr_X) > 0.0) {
+//            std::string outs_2 = "  -----> " +
+//                                 x[i][k].get(GRB_StringAttr_VarName) + ": " +
+//                                 std::to_string(x[i][k].get(GRB_DoubleAttr_X));
+//
+//            fprintf(*out, outs_2.c_str());
+//          }
+//        }
+//      }
+//    }
+//  }
+//}
 
 void Model::printICVariables(FILE **out) {
 
