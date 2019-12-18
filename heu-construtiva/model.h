@@ -10,6 +10,7 @@ int L;
 set<int> channels{25, 42, 43, 44, 45};
 deque<int> links;
 double dataRates[10][4];
+double distanceMatrix[2048][2048];
 
 int overlap[45][45] = {{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0},
                            {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0},
@@ -80,6 +81,9 @@ public:
 
   void computeInterference() {
     for (int i = 0; i < int(scheduled_links.size()); i++) {
+
+      
+      
       for (int j = 0; j < int(scheduled_links.size()); j++) {
 	
       }
