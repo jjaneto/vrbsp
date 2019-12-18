@@ -5,12 +5,19 @@
 
 using namespace std;
 
+const int X_c = 0;
+const int Y_c = 1;
+
+int nConnections;
 int B[] = {20, 40, 80, 160};
 int L;
 set<int> channels{25, 42, 43, 44, 45};
 deque<int> links;
 double dataRates[10][4];
-double distanceMatrix[2048][2048];
+double distanceMatrix[2048][2048], interferenceMatrix[2048][2048];
+double senders[2048][2], receivers[2048][2];
+double powerSender, alfa;
+map<int, vector<int>> chToLinks;
 
 int overlap[45][45] = {{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0},
                            {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0},
@@ -60,12 +67,35 @@ int overlap[45][45] = {{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
 
 struct Link {
-  pair<double, double> coords;
+  pair<double, double> sendCoords;
+  pair<double, double> recCoords;
   int id;
   int ch;
   int bw;
-  double SINR;
+  double interference;
   int MCS;
+
+  Link() {}
+
+  Link (const Link &x) {
+    id = x.id;
+    ch = x.ch;
+    bw = x.bw;
+    interference = x.interference;
+    MCS = x.MCS;
+    sendCoords = x.sendCoords;
+    recCoords = x.recCoords;
+  }
+
+  void operator=(const Link &x) {
+    id = x.id;
+    ch = x.ch;
+    bw = x.bw;
+    interference = x.interference;
+    MCS = x.MCS;
+    sendCoords = x.sendCoords;
+    recCoords = x.recCoords;    
+  }
 };
 
 class Solution {
@@ -80,14 +110,18 @@ public:
   }
 
   void computeInterference() {
-    for (int i = 0; i < int(scheduled_links.size()); i++) {
-
+    int nLinks = int(scheduled_links.size());
+    for (int i = 0; i < nLinks; i++) {
       
       
-      for (int j = 0; j < int(scheduled_links.size()); j++) {
+      for (int j = 0; j < nLinks; j++) {
 	
       }
     }
+  }
+
+  vector<Link> getScheduledLinks() const {
+    return scheduled_links;
   }
   
   int getObjective() {
@@ -100,6 +134,10 @@ public:
 
   void insert(const Solution &S, int ch, int link);
 
+  void insert(const Link &l) { //TODO
+
+  }
+
   friend bool operator<(const Solution &o1, const Solution &o2);
   
   friend bool operator>(const Solution &o1, const Solution &o2);
@@ -108,5 +146,6 @@ public:
 };
 
 Solution S;
+vector<Link> allLinks;
 
 #endif

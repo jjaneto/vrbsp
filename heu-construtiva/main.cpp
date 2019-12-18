@@ -10,6 +10,7 @@ bool operator>(const Solution &o1, const Solution &o2) {
 
 Solution &Solution::operator=(const Solution &o1) {
 
+  return *this;
 }
 
 
@@ -19,11 +20,54 @@ int objective_function() {
 }
 
 void updateChannels(const Solution &sol) {
-
+  vector<Link> links = sol.getScheduledLinks();
+  for (const Link &l : links) {
+    chToLinks[l.ch].emplace_back(l.id);
+  }
 }
 
 void split(Solution &dest, const Solution &src, int ch) {
+  int ch1, ch2; //TODO
+  vector<Link> links = src.getScheduledLinks();
 
+  double mxInter = -1.0; int idLink = -1;
+  Link largest1, largest2;
+  for (const Link &l : links) {
+    if (l.interference > mxInter) {
+      largest1 = l;
+      mxInter = l.interference;
+    }
+  }
+
+  mxInter = -1.0; idLink = -1;
+  for (const Link &l : links) {
+    if (l.interference > mxInter && l.id != largest1.id) {
+      largest2 = l;
+      mxInter = l.interference;
+    }
+  }
+
+  Link Laux1(largest1), Laux2(largest2);
+  Laux1.ch = ch1, Laux2.ch = ch2;
+
+  Solution prot = src;
+  prot.insert(Laux1); prot.insert(Laux2);
+  
+  for (const Link &l : links) {
+    Solution prot_copy1 = prot, prot_copy2 = prot;
+    //------------------
+    // First, delete all links in channel c, as they will be split into c' and c''
+    //------------------
+
+    
+    if ((l.id == Laux1.id) || (l.id == Laux2.id))
+      continue;
+
+    //---------------
+    // Put l in prot_copy1 and in prot_copy2 and compare which one has the better throughput
+    //--------------
+    prot = (prot_copy1 > prot_copy2) ? prot_copy1 : prot_copy2;
+  }
 }
 
 void decideBest(Solution &f, const Solution &u, const Solution &v) {
@@ -31,7 +75,7 @@ void decideBest(Solution &f, const Solution &u, const Solution &v) {
 }
 
 void Solution::insert(const Solution &S, int ch, int link) {
-
+  
 }
 
 int whichBw(int ch) {
@@ -45,15 +89,47 @@ int whichBw(int ch) {
   return 20;
 }
 
+double distance (double X_si, double Y_si, double X_ri, double Y_ri) { //TODO
+
+  return 0;
+}
+
+
+void distanceAndInterference() {
+  for (int i = 0; i < nConnections; i++) {
+    double X_si = senders[i][X_c];
+    double Y_si = senders[i][Y_c];
+
+     
+    for (int j = 0; j < nConnections; j++) {
+
+      double X_rj = receivers[j][X_c];
+      double Y_rj = receivers[j][Y_c];
+
+      double dist = distance(X_si, Y_si, X_rj, Y_rj);
+
+      distanceMatrix[i][j] = dist;       
+      if (i == j) {
+	interferenceMatrix[i][j] = 0.0;
+      } else {
+	interferenceMatrix[i][j] = (dist != 0.0) ? powerSender / pow(dist, alfa) : 1e8;	 
+      }
+    }
+  }
+}
+
 int main() {
   srand(time(NULL));
   //-----------------------
-  //scanf("%d", &L);
-  L = 0;
+  // Read the file...
 
-  for (int i = 1; i <= L; i++) {
-    links.emplace_back(i);
-  }
+  // Initialize necessary things...
+  chToLinks[25] = vector<int>();
+  chToLinks[42] = vector<int>();
+  chToLinks[43] = vector<int>();
+  chToLinks[44] = vector<int>();
+  chToLinks[45] = vector<int>();
+  //-----------------------
 
   while (!links.empty()) {
     int idx = rand()%(links.size());
@@ -61,7 +137,8 @@ int main() {
 
     Solution S_o, S_t;
     //-------------
-    for (int ch : channels) {
+    for (auto &el : chToLinks) {
+      int ch = el.first;
       S_o.insert(S, ch, link);
       if (whichBw(ch) > 20) {
 	split(S_t, S_o, ch);
