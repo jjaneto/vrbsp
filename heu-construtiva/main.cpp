@@ -30,6 +30,8 @@ void split(Solution &dest, const Solution &src, int ch) {
   int ch1, ch2; //TODO
   vector<Link> links = src.getScheduledLinks();
 
+  //--------------------------------------------------------
+  // The two pairs of links with the largest interference
   double mxInter = -1.0; int idLink = -1;
   Link largest1, largest2;
   for (const Link &l : links) {
@@ -49,14 +51,17 @@ void split(Solution &dest, const Solution &src, int ch) {
 
   Link Laux1(largest1), Laux2(largest2);
   Laux1.ch = ch1, Laux2.ch = ch2;
+  //-------------------------------------------------------
 
   Solution prot = src;
   prot.insert(Laux1); prot.insert(Laux2);
   
-  for (const Link &l : links) {
+  for (const Link &l : links) { //TODO: Choose the links RANDOMLY
     Solution prot_copy1 = prot, prot_copy2 = prot;
     //------------------
     // First, delete all links in channel c, as they will be split into c' and c''
+    prot_copy1.deleteLinksFromChannel(ch);
+    prot_copy2.deleteLinksFromChannel(ch);    
     //------------------
 
     
@@ -65,6 +70,8 @@ void split(Solution &dest, const Solution &src, int ch) {
 
     //---------------
     // Put l in prot_copy1 and in prot_copy2 and compare which one has the better throughput
+    prot_copy1.insert(l);
+    prot_copy2.insert(l);
     //--------------
     prot = (prot_copy1 > prot_copy2) ? prot_copy1 : prot_copy2;
   }

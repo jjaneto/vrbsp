@@ -101,7 +101,7 @@ struct Link {
 class Solution {
 public:
   double objective;
-  vector<Link> scheduled_links;
+  deque<Link> scheduled_links;
 
   void computeObjective() {
     for (Link &x : scheduled_links) {
@@ -136,6 +136,14 @@ public:
 
   void insert(const Link &l) { //TODO
 
+  }
+
+  void deleteLinksFromChannel(int ch) {
+    for (Link &l : links) {
+      if (l.ch == ch) {
+	//TODO: Finish this implementation.
+      }
+    }
   }
 
   friend bool operator<(const Solution &o1, const Solution &o2);
