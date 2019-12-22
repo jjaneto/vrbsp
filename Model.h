@@ -18,7 +18,7 @@
 #include <iomanip>
 #include <vector>
 
-#elif
+#else
 #include <bits/stdc++.h>
 #endif
 
@@ -29,9 +29,11 @@ class Model {
 public:
 
     enum type {
-        nonlinear,
-        linearV1,
-        linear_bigM
+        nonLinear,
+        W,
+        W2,
+        bigM,
+        bigM2
     };
 
     Model(std::string file, type formulation);
@@ -40,7 +42,7 @@ public:
 
     ~Model();
 
-    int inst;
+    int run;
     int nDecisionVariables;
     int nConstraints;
     int nConnections;
@@ -100,7 +102,7 @@ public:
 
     GRBEnv *env;
     GRBModel *model;
-    GRBVar x[128][128][50], y[128][128][4][10], z[128][128][45], I[128][128], IC[128][128][45], w[128][128][128][128];
+    GRBVar x[2048][45], y[2048][4][10], z[2048][45], I[2048], IC[2048][45], w[2048][2048], xV2[2048][45][10];
     GRBLinExpr objectiveFunction;
     std::vector<GRBLinExpr *> constraints;
 
@@ -120,6 +122,8 @@ public:
 
     void defineObjectiveFunction();
 
+    void defineObjectiveFunctionV2();
+
     void defineConstraints();
 
     void generateInterferenceDistanceMatrix();
@@ -138,29 +142,33 @@ public:
 
     void defineConstraintOne();
 
+    void defineConstraintOneV2();
+
     void defineConstraintTwo();
 
     void defineConstraintThree();
+
+    void defineConstraintThreeV2();
 
     void defineConstraintFour();
 
     void defineConstraintFive();
 
+    void defineConstraintFiveV2();
+
     void defineConstraintSix();
+
+    void defineConstraintSixV2();
 
     void defineConstraintSeven();
 
+    void defineConstraintSevenV2();
+
     void defineConstraintEight();
 
+    void defineConstraintEightV2();
+
     void defineConstraintNine();
-
-    void defineConstraintTen();
-
-    void defineConstraintEleven();
-
-    void defineConstraintTwelve();
-
-    void defineConstraintThirteen();
 
     int getStatus();
 
@@ -178,8 +186,25 @@ public:
 
     double getRuntime();
 
+    void turnOffLogConsole(bool flag);
+
+    void setLogToMyDefaultFile();
+
+    void printXVariables(FILE** out);
+
+    void printYVariables(FILE** out);
+
+    void printZVariables(FILE** out);
+
+    void printICVariables(FILE** out);
+
+    void printIVariables(FILE** out);
+
+    void printWVariables(FILE** out);
+
     void writeGurobiOutSolution(const std::string path);
 
+    void setTimeLimit(double time);
 };
 
 #endif //VRBSP_MODEL_H

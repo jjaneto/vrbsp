@@ -51,17 +51,4 @@ struct Interference {
     double valueInterference;
 };
 
-struct Channel {
-    int bandwidth;
-    int frequency;
-    double throughput;
-    std::vector<Connection> listConnections;
-};
-
-struct Spectrum {
-    int maxSpectrum;
-    int usedSpectrum;
-    std::vector<Channel> listChannels;
-};
-
 #endif //VRBSP_STRUCTURES_H

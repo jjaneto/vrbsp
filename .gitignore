@@ -10,4 +10,10 @@ Makefile
 **/*.sol
 results/*
 instancias/**
-**/*~
+**/input
+**/oficials/
+**/._*
+**/vrbsp
+**/Makefile
+out*_*
+heu-construtiva/
