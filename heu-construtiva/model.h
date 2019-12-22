@@ -67,8 +67,7 @@ int overlap[45][45] = {{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
 
 struct Link {
-  pair<double, double> sendCoords;
-  pair<double, double> recCoords;
+  int _idR, _idS;
   int id;
   int ch;
   int bw;
@@ -83,8 +82,6 @@ struct Link {
     bw = x.bw;
     interference = x.interference;
     MCS = x.MCS;
-    sendCoords = x.sendCoords;
-    recCoords = x.recCoords;
   }
 
   void operator=(const Link &x) {
@@ -93,8 +90,6 @@ struct Link {
     bw = x.bw;
     interference = x.interference;
     MCS = x.MCS;
-    sendCoords = x.sendCoords;
-    recCoords = x.recCoords;    
   }
 };
 
@@ -109,18 +104,7 @@ public:
     }
   }
 
-  void computeInterference() {
-    int nLinks = int(scheduled_links.size());
-    for (int i = 0; i < nLinks; i++) {
-      
-      
-      for (int j = 0; j < nLinks; j++) {
-	
-      }
-    }
-  }
-
-  vector<Link> getScheduledLinks() const {
+  deque<Link> getScheduledLinks() const {
     return scheduled_links;
   }
   
@@ -132,16 +116,41 @@ public:
     objective = ob;
   }
 
-  void insert(const Solution &S, int ch, int link);
+  //void insert(const Solution &S, int ch, int link);
 
   void insert(const Link &l) { //TODO
+    scheduled_links.emplace_back(l);
+  }
 
+  void computeInterference() {
+    for (Link &u : links) {
+      for (Link &v : links) {
+	if (u.id == v.id)
+	  continue;
+
+	if (overlap[u.ch][v.ch]) {
+	  //Something like this?
+	  // u.interference += interferenceMatrix[u.receiver][v.sender];
+	}
+      }
+    }
   }
 
   void deleteLinksFromChannel(int ch) {
-    for (Link &l : links) {
+    set<int> MARK;
+    for (Link &l : scheduled_links) {
       if (l.ch == ch) {
-	//TODO: Finish this implementation.
+	MARK.insert(l.id);
+	//MARK.emplace_back(l.id);
+      }
+    }
+
+    auto it = scheduled_links.begin();
+    while (it != scheduled_links.end()) {
+      if (MARK.count(it->id)) {
+	it = scheduled_links.erase(it);
+      } else {
+	it++;
       }
     }
   }

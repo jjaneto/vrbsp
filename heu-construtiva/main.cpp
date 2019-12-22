@@ -14,13 +14,17 @@ Solution &Solution::operator=(const Solution &o1) {
 }
 
 
+inline void decideBest(Solution &f, const Solution &u, const Solution &v) {
+  f = (u > v) ? u : v;
+}
+
 int objective_function() {
   
   return 0;
 }
 
 void updateChannels(const Solution &sol) {
-  vector<Link> links = sol.getScheduledLinks();
+  deque<Link> links = sol.getScheduledLinks();
   for (const Link &l : links) {
     chToLinks[l.ch].emplace_back(l.id);
   }
@@ -28,7 +32,7 @@ void updateChannels(const Solution &sol) {
 
 void split(Solution &dest, const Solution &src, int ch) {
   int ch1, ch2; //TODO
-  vector<Link> links = src.getScheduledLinks();
+  deque<Link> links = src.getScheduledLinks();
 
   //--------------------------------------------------------
   // The two pairs of links with the largest interference
@@ -73,17 +77,10 @@ void split(Solution &dest, const Solution &src, int ch) {
     prot_copy1.insert(l);
     prot_copy2.insert(l);
     //--------------
-    prot = (prot_copy1 > prot_copy2) ? prot_copy1 : prot_copy2;
+    decideBest(prot, prot_copy1, prot_copy2);
   }
 }
 
-void decideBest(Solution &f, const Solution &u, const Solution &v) {
-  f = (u > v) ? u : v;
-}
-
-void Solution::insert(const Solution &S, int ch, int link) {
-  
-}
 
 int whichBw(int ch) {
   if (ch >= 26 && ch <= 37)
@@ -97,8 +94,7 @@ int whichBw(int ch) {
 }
 
 double distance (double X_si, double Y_si, double X_ri, double Y_ri) { //TODO
-
-  return 0;
+  return hypot((X_si - X_ri), (Y_si - Y_ri));
 }
 
 
@@ -142,15 +138,16 @@ int main() {
     int idx = rand()%(links.size());
     int link = links[idx];
 
-    Solution S_o, S_t;
+    Solution S_1, S_2;
     //-------------
     for (auto &el : chToLinks) {
       int ch = el.first;
-      S_o.insert(S, ch, link);
+      Link aux; aux.id = link, aux.ch = ch;
+      S_1.insert(aux);
       if (whichBw(ch) > 20) {
-	split(S_t, S_o, ch);
+	split(S_2, S_1, ch);
       }
-      decideBest(S, S_o, S_t);
+      decideBest(S, S_1, S_2);
     }
     updateChannels(S);
     //-------------
