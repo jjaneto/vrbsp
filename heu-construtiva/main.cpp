@@ -198,33 +198,33 @@ int main() {
   readFile();
   // Initialize necessary things...
   /*
-  chToLinks[25] = vector<int>();
-  chToLinks[42] = vector<int>();
-  chToLinks[43] = vector<int>();
-  chToLinks[44] = vector<int>();
-  chToLinks[45] = vector<int>();
-  //-----------------------
+    chToLinks[25] = vector<int>();
+    chToLinks[42] = vector<int>();
+    chToLinks[43] = vector<int>();
+    chToLinks[44] = vector<int>();
+    chToLinks[45] = vector<int>();
+    //-----------------------
 
-  while (!links.empty()) {
+    while (!links.empty()) {
     int idx = rand()%(links.size());
     int link = links[idx];
 
     Solution S_1, S_2;
     //-------------
     for (auto &el : chToLinks) {
-      int ch = el.first;
-      Link aux; aux.id = link, aux.ch = ch;
-      S_1.insert(aux);
-      if (whichBw(ch) > 20) {
-	split(S_2, S_1, ch);
-      }
-      decideBest(S, S_1, S_2);
+    int ch = el.first;
+    Link aux; aux.id = link, aux.ch = ch;
+    S_1.insert(aux);
+    if (whichBw(ch) > 20) {
+    split(S_2, S_1, ch);
+    }
+    decideBest(S, S_1, S_2);
     }
     updateChannels(S);
     //-------------
     swap(links[idx], links.back());
     links.pop_back();
-  }
+    }
   */
   return 0;
 }
