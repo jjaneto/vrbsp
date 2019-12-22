@@ -16,7 +16,9 @@ deque<int> links;
 double dataRates[10][4];
 double distanceMatrix[2048][2048], interferenceMatrix[2048][2048];
 double senders[2048][2], receivers[2048][2];
-double powerSender, alfa;
+//double SINR[10][4];
+vector<vector<double>> SINR;
+double powerSender, alfa, noise, ttm;
 map<int, vector<int>> chToLinks;
 
 int overlap[45][45] = {{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0},
@@ -72,9 +74,15 @@ struct Link {
   int ch;
   int bw;
   double interference;
+  double SINR;
   int MCS;
 
-  Link() {}
+  Link() {
+    _idR = _idS = id = -1;
+    ch = bw = -1;
+    interference = SINR = 0.0;
+    MCS = -1;    
+  }
 
   Link (const Link &x) {
     id = x.id;
@@ -99,6 +107,23 @@ public:
   deque<Link> scheduled_links;
 
   void computeObjective() {
+    
+    for (Link &x : scheduled_links) {
+      int mxDataRate = (x.bw == 20) ? 9 : 10;
+      
+      for (int _mcs = 0; _mcs < mxDataRate; _mcs++) {
+	if (SINR[_mcs][x.bw] > x.SINR) {
+	  x.MCS = _mcs - 1;
+
+	  if (x.MCS == -1) {
+	    x.MCS = 0;
+	  }
+	  
+	  break;
+	}
+      }    
+    }
+    
     for (Link &x : scheduled_links) {
       objective += dataRates[x.MCS][x.bw];
     }
@@ -123,16 +148,17 @@ public:
   }
 
   void computeInterference() {
-    for (Link &u : links) {
-      for (Link &v : links) {
+    for (Link &u : scheduled_links) {
+      for (Link &v : scheduled_links) {
 	if (u.id == v.id)
 	  continue;
 
 	if (overlap[u.ch][v.ch]) {
-	  //Something like this?
-	  // u.interference += interferenceMatrix[u.receiver][v.sender];
+	  u.interference += interferenceMatrix[v._idR][u._idS];
 	}
       }
+
+      u.SINR = interferenceMatrix[u._idS][u._idR] / (u.interference + noise);
     }
   }
 

@@ -93,7 +93,7 @@ int whichBw(int ch) {
   return 20;
 }
 
-double distance (double X_si, double Y_si, double X_ri, double Y_ri) { //TODO
+double distance (double X_si, double Y_si, double X_ri, double Y_ri) {
   return hypot((X_si - X_ri), (Y_si - Y_ri));
 }
 
@@ -121,12 +121,83 @@ void distanceAndInterference() {
   }
 }
 
+double convertDBMToMW(double _value) {
+  double result = 0.0, b;
+
+  b = _value / 10.0;// dBm dividido por 10
+  result = pow(10.0, b);//Converte de DBm para mW
+
+  return result;
+}
+
+void convertTableToMW(const vector<vector<double> > &_SINR, vector<vector<double> > &_SINR_Mw) {
+  double result, b;
+  for (int i = 0; i < _SINR_Mw.size(); i++) {
+    for (int j = 0; j < _SINR_Mw[i].size(); j++) {
+
+      if (_SINR[i][j] != 0) {
+        b = _SINR[i][j] / 10.0;// dBm divided by 10
+        result = pow(10.0, b);//Convert DBM to mW
+
+        _SINR_Mw[i][j] = result;
+      } else {
+        _SINR_Mw[i][j] = 0;
+      }
+    }
+  }
+}
+
+void readFile() {
+  SINR.assign(10, vector<double>(4, 0));
+  double aux1;
+  scanf("%lf", &aux1);
+  scanf("%d %lf %lf %lf %lf %lf %lf %lf %lf", &nConnections, &ttm, &alfa, &noise, &powerSender, &aux1, &aux1,
+	&aux1, &aux1);
+
+  if (noise != 0) {
+    noise = convertDBMToMW(noise);
+  }
+
+  for (int i = 0; i < 10; i++) {
+    for (int j = 0; j < 4; j++) {
+      scanf("%lf", &dataRates[i][j]);
+    }
+  }
+
+  for (int i = 0; i < 10; i++) {
+    for (int j = 0; j < 4; j++) {
+      scanf("%lf", &SINR[i][j]);
+    }
+  }
+
+  //TODO: Check why this is necessary
+  convertTableToMW(SINR, SINR);
+
+  for (int i = 0; i < nConnections; i++) {
+    double x, y; scanf("%lf %lf", &x, &y);
+    receivers[i][X_c] = x;
+    receivers[i][Y_c] = y;
+  }
+
+  for (int i = 0; i < nConnections; i++) {
+    double x, y; scanf("%lf %lf", &x, &y);
+    senders[i][X_c] = x;
+    senders[i][Y_c] = y;
+  }
+
+  memset(interferenceMatrix, 0, sizeof interferenceMatrix);
+  memset(distanceMatrix, 0, sizeof distanceMatrix);
+
+  distanceAndInterference();
+}
+
 int main() {
   srand(time(NULL));
   //-----------------------
   // Read the file...
-
+  readFile();
   // Initialize necessary things...
+  /*
   chToLinks[25] = vector<int>();
   chToLinks[42] = vector<int>();
   chToLinks[43] = vector<int>();
@@ -154,5 +225,6 @@ int main() {
     swap(links[idx], links.back());
     links.pop_back();
   }
+  */
   return 0;
 }
