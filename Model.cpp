@@ -72,22 +72,22 @@ Model::Model(std::string file, type formulation, int number, std::string outputF
   createBigM();
 //
 
-  try {
-    env = new GRBEnv();
-    model = new GRBModel(*env);
-
-    createDecisionVariables();
-    defineConstraints();
-
-    if (_type == bigM || _type == W) {
-      defineObjectiveFunction();
-    } else if (_type == bigM2 || _type == W2) {
-      defineObjectiveFunctionV2();
-    }
-  } catch (GRBException ex) {
-    std::cout << ex.getMessage() << std::endl;
-    std::cout << ex.getErrorCode() << std::endl;
-  }
+//  try {
+//    env = new GRBEnv();
+//    model = new GRBModel(*env);
+//
+//    createDecisionVariables();
+//    defineConstraints();
+//
+//    if (_type == bigM || _type == W) {
+//      defineObjectiveFunction();
+//    } else if (_type == bigM2 || _type == W2) {
+//      defineObjectiveFunctionV2();
+//    }
+//  } catch (GRBException ex) {
+//    std::cout << ex.getMessage() << std::endl;
+//    std::cout << ex.getErrorCode() << std::endl;
+//  }
 
   fclose(file_);
 }
@@ -143,7 +143,7 @@ void Model::generateInterferenceDistanceMatrix() { //TODO: Double check this fun
         auxInterference.idSender = j;
 
         coordX2 = sendersCoord[j].x;
-        coordY2 = recCoord[j].y;
+        coordY2 = sendersCoord[j].y;
 
         if (coordX1 == coordX2 && coordY1 == coordY2) { //TODO: Do the comparison in the right way (with epsilon)
           result = 0.0;
@@ -589,6 +589,7 @@ void Model::createBigM() {
 
   for (int c = 0; c < nConnections; c++) {
     double value = computeInterference(c);
+    printf("value eh %.3lf\n", value);
     M_ij.emplace_back(value);
   }
 }

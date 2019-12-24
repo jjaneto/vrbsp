@@ -15,5 +15,6 @@ for ((i=begin; i<=end; i++)) do
     echo ${timeLimit}
     echo ${i}
   } > input;
-  ./vrbsp input >> out${instance}_${formulation};
+  #./cmake-build-debug/vrbsp input >> out${instance}_${formulation};
+  ./cmake-build-debug/vrbsp input;
 done

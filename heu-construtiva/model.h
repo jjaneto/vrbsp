@@ -18,8 +18,9 @@ double distanceMatrix[2048][2048], interferenceMatrix[2048][2048];
 double senders[2048][2], receivers[2048][2];
 //double SINR[10][4];
 vector<vector<double>> SINR;
-DOUBLE powerSender, alfa, noise, ttm;
+double powerSender, alfa, noise, ttm;
 map<int, vector<int>> chToLinks;
+unordered_map<int, pair<int, int>> mapChtoCh;
 
 int overlap[45][45] = {{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0},
                        {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0},
@@ -67,6 +68,27 @@ int overlap[45][45] = {{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                        {1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0},
                        {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1}};
 
+int whichBw(int ch) {
+  if (ch >= 26 && ch <= 37)
+    return 40;
+  else if (ch >= 38  && ch <= 43)
+    return 80;
+  else if (ch == 44 || ch == 45)
+    return 160;
+  
+  return 20;
+}
+
+inline int bwIdx(int bw) {
+  if (bw == 40) {
+    return 1;
+  } else if (bw == 80) {
+    return 2;
+  } else if(bw == 160) {
+    return 3;
+  }
+  return 0;
+}
 
 struct Link {
   int _idR, _idS;
@@ -83,11 +105,21 @@ struct Link {
     interference = SINR = 0.0;
     MCS = -1;
   }
+  
+  Link(int id) : _idR(id), _idS(id), id(id) {
+    //printf("entrei aqui id eh %d\n", id);
+    //_idR = _idS = id = -1;
+    ch = bw = -1;
+    interference = SINR = 0.0;
+    MCS = -1;
+  }
 
   Link(const Link &x) {
     id = x.id;
     ch = x.ch;
     bw = x.bw;
+    _idS = x._idS;
+    _idR = x._idR;
     interference = x.interference;
     MCS = x.MCS;
   }
@@ -98,6 +130,11 @@ struct Link {
     bw = x.bw;
     interference = x.interference;
     MCS = x.MCS;
+  }
+
+  void setChannel(int ch) {
+    this->ch = ch;
+    this->bw = whichBw(ch);
   }
 };
 
@@ -110,10 +147,12 @@ public:
 
     for (Link &x : scheduled_links) {
       int mxDataRate = (x.bw == 20) ? 9 : 10;
-
+      bool go = false;
+      
       for (int _mcs = 0; _mcs < mxDataRate; _mcs++) {
-        if (SINR[_mcs][x.bw] > x.SINR) {
+        if (SINR[_mcs][bwIdx(x.bw)] > x.SINR) {
           x.MCS = _mcs - 1;
+          go = true;
 
           if (x.MCS == -1) {
             x.MCS = 0;
@@ -122,10 +161,15 @@ public:
           break;
         }
       }
+
+      if (!go) {
+        x.MCS = mxDataRate - 1;
+      }
     }
 
     for (Link &x : scheduled_links) {
-      objective += dataRates[x.MCS][x.bw];
+      //printf("link %d MCS %d bw %d\n", x.id, x.MCS, x.bw);
+      objective += dataRates[x.MCS][bwIdx(x.bw)];
     }
   }
 
@@ -133,7 +177,17 @@ public:
     return scheduled_links;
   }
 
-  int getObjective() {
+  deque<Link> getLinksInChannel(int ch) const {
+    deque<Link> ret;
+    for (const Link &l : scheduled_links) {
+      if (l.ch == ch) {
+        ret.emplace_back(l);
+      }
+    }
+    return ret;
+  }
+
+  double getObjective() {
     return objective;
   }
 
@@ -141,33 +195,46 @@ public:
     objective = ob;
   }
 
-  //void insert(const Solution &S, int ch, int link);
-
-  void insert(const Link &l) { //TODO
+  void insert(const Link &l) {
+    //printf("inserting link id %d, idS %d, idR %d\n", l.id, l._idS, l._idR);
+    //Link aux(l);
+    //printf("aux tem %d %d %d\n", aux.id, aux._idR, aux._idS);
     scheduled_links.emplace_back(l);
+    computeInterference();
+
+    objective = 0.0;
+    computeObjective();
   }
 
   void computeInterference() {
     for (Link &u : scheduled_links) {
       for (Link &v : scheduled_links) {
-        if (u.id == v.id)
+        if (u.id == v.id) {
+          //printf("     -> entrei \n");
           continue;
+        }
 
         if (overlap[u.ch][v.ch]) {
           u.interference += interferenceMatrix[v._idR][u._idS];
         }
       }
 
-      U.SINR = interferenceMatrix[u._idS][u._idR] / (u.interference + noise);
+      if (u.interference == 0.0) {
+        u.SINR = 1e8;
+      } else {
+        u.SINR = interferenceMatrix[u._idS][u._idR] / (u.interference + noise);
+      }
+      
+      //printf("%d %d %.10lf %.10lf %.10lf\n",u._idS, u._idR, u.interference, noise, interferenceMatrix[u._idS][u._idR]);
+      //printf("sinr foi %.3lf\n", u.SINR);
     }
   }
 
-  void deleteLinksFromChannel(int ch) {
+  void clearChannel(int ch) {
     set<int> MARK;
     for (Link &l : scheduled_links) {
       if (l.ch == ch) {
         MARK.insert(l.id);
-        //MARK.emplace_back(l.id);
       }
     }
 

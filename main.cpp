@@ -9,11 +9,11 @@
 #include "Model.h"
 
 struct instance {
-    int L;
-    int code;
-    double timeLimit;
-    std::string area;
-    Model::type tp;
+  int L;
+  int code;
+  double timeLimit;
+  std::string area;
+  Model::type tp;
 };
 
 void printLines(std::vector<std::string> lines) {
@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
     inst.tp = Model::type::W2;
   } else if (strcmp(type, "bigM2") == 0) {
     inst.tp = Model::type::bigM2;
-  }else {
+  } else {
     fprintf(stderr, "Error during type model reading (I've read %s). Closing program...\n", type);
     exit(-1);
   }
@@ -87,32 +87,32 @@ int main(int argc, char **argv) {
   vector<string> lines;
 //  for (int i = begin; i <= end; i++) {
 
-    std::string file = "instancias/" + inst.area +"/U_" + to_string(inst.L) + "/U_" + to_string(inst.L) + "_";
-    std::string extensao = ".txt";
+  std::string file = "instancias/" + inst.area + "/U_" + to_string(inst.L) + "/U_" + to_string(inst.L) + "_";
+  std::string extensao = ".txt";
 
-    std::string entrada = file + std::to_string(run) + extensao;
-    std::string saida = "results/" + inst.area + "/" + getTypeString(inst.tp) + "/L_" + to_string(inst.L) + "/";
+  std::string entrada = file + std::to_string(run) + extensao;
+  std::string saida = "results/" + inst.area + "/" + getTypeString(inst.tp) + "/L_" + to_string(inst.L) + "/";
 
-    Model *model = new Model(entrada, inst.tp, run, saida);
+  Model *model = new Model(entrada, inst.tp, run, saida);
 
-    model->turnOffLogConsole(true);
-    model->setLogToMyDefaultFile();
-    if (inst.timeLimit != -1.0) {
-      model->setTimeLimit(inst.timeLimit);
-    }
+//  model->turnOffLogConsole(true);
+//  model->setLogToMyDefaultFile();
+//  if (inst.timeLimit != -1.0) {
+//    model->setTimeLimit(inst.timeLimit);
+//  }
 
-    printf("Otimizando entrada %s\n", entrada.c_str());
-    model->solve();
-    model->printResults();
-    string w = saida + "outSol_" + to_string(run) + ".sol";
-    model->writeGurobiOutSolution(w);
-
+//  printf("Otimizando entrada %s\n", entrada.c_str());
+//  model->solve();
+//  model->printResults();
+//  string w = saida + "outSol_" + to_string(run) + ".sol";
+//  model->writeGurobiOutSolution(w);
+//
 //    char out[100];
 //    sprintf(out, "%.3lf %.3lf %.3lf %.3lf\n", model->getObjVal(), model->getObjBound(), model->getMIPGap(),
 //            model->getRuntime());
 //    lines.push_back(string(out));
 
-    delete model;
+  delete model;
 //  }
 
   return 0;
