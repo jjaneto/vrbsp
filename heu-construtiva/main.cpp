@@ -13,7 +13,7 @@ bool operator==(const Solution &o1, const Solution &o2) {
   if (o1.objective != o2.objective)
     return false;
 
-  if (o1.scheduled_links.size() != o2.scheduled_link.size())
+  if (o1.scheduled_links.size() != o2.scheduled_links.size())
     return false;
 
   bool cond = true;
@@ -67,8 +67,14 @@ Solution &Solution::operator=(const Solution &o1) {
 }
 
 inline void decideBest(Solution &f, const Solution &u, const Solution &v) {
-  if (u > f || v > f)
+  if (u > f || v > f) {
+    if (u > v) {
+      printf("best solution is S1 with objective %.2lf\n", u.getObjective());
+    } else if(v > u) {
+      printf("best solution is S2 with objective %.2lf\n", v.getObjective());
+    }
     f = (u > v) ? u : v;
+  }
 }
 
 void updateChannels(const Solution &sol) {
@@ -134,51 +140,6 @@ void split(Solution &dest, const Solution &src, int ch) {
 
   dest = current;
   
-  //--------------------------------------------------------
-  // The two pairs of links with the largest interference
-  //double mxInter = -1.0; int idLink = -1;
-  //Link largest1, largest2;
-  //for (const Link &l : links) {
-  //  if (l.interference > mxInter) {
-  //    largest1 = l;
-  //    mxInter = l.interference;
-  //  }
-  //}
-  //
-  //mxInter = -1.0; idLink = -1;
-  //for (const Link &l : links) {
-  //  if (l.interference > mxInter && l.id != largest1.id) {
-  //    largest2 = l;
-  //    mxInter = l.interference;
-  //  }
-  //}
-  //
-  //Link Laux1(largest1), Laux2(largest2);
-  //Laux1.setChannel(ch1), Laux2.setChannel(ch2);
-  ////Laux1.ch = ch1, Laux2.ch = ch2;
-  ////-------------------------------------------------------
-  //
-  //Solution prot = src;
-  //prot.insert(Laux1); prot.insert(Laux2);
-  //
-  //for (const Link &l : links) { //TODO: Choose the links RANDOMLY
-  //  Solution prot_copy1 = prot, prot_copy2 = prot;
-  //  //------------------
-  //  // First, delete all links in channel c, as they will be split into c' and c''
-  //  prot_copy1.deleteLinksFromChannel(ch);
-  //  prot_copy2.deleteLinksFromChannel(ch);    
-  //  //------------------
-  //
-  //  if ((l.id == Laux1.id) || (l.id == Laux2.id))
-  //    continue;
-  //
-  //  //---------------
-  //  // Put l in prot_copy1 and in prot_copy2 and compare which one has the better throughput
-  //  prot_copy1.insert(l);
-  //  prot_copy2.insert(l);
-  //  //--------------
-  //  decideBest(prot, prot_copy1, prot_copy2);
-  //}
 }
 
 double distance (double X_si, double Y_si, double X_ri, double Y_ri) {
@@ -299,6 +260,16 @@ inline void mapSplitChannels() {
   mapChtoCh[37] = {23, 24};    
 }
 
+void printSolution(const Solution &check) {
+  printf("Solution is:\n");
+  deque<Link> aux = check.getScheduledLinks();
+
+  for (const Link &l : aux) {
+    printf("LINK id %d\n", l.id);
+    printf("   _idR %d, _idS %d, ch %d, bw %d, interference %.3lf, SINR %.3lf, MCS %d\n", l._idR, l._idS, l.ch, l.bw, l.interference, l.SINR, l.MCS);
+  }
+}
+
 int main() {
   srand(time(NULL));
   //-----------------------
@@ -321,27 +292,32 @@ int main() {
     int link = links[idx];
     printf("link %d\n", link);
     //-------------
-    Solution S_copy = S;
+    Solution Scopy(S);
     for (auto &el : chToLinks) {
       printf("--------------> visitando channel %d\n", el.first);
-      Solution S_1, S_2;
+      Solution S1(S), S2;
       int ch = el.first;
       Link aux(link);
       aux.setChannel(ch);
-      S_1.insert(aux);
-      printf("objective %.3lf\n", S_1.getObjective());
+      S1.insert(aux);
+      //
       if (whichBw(ch) > 20) {
-        split(S_2, S_1, ch);
+        split(S2, S1, ch);
       }
-      decideBest(S_copy, S_1, S_2);
+      
+      //
+      decideBest(Scopy, S1, S2);
+      //
     }
-    if (S_copy > S) {
-      S = S_copy;
-      updateChannels(S);
+    if (Scopy > S) {
+      S = Scopy;
     }
+
+    printSolution(S);
     //-------------
     swap(links[idx], links.back());
     links.pop_back();
+    puts("\n\n");
   }
   return 0;
 }

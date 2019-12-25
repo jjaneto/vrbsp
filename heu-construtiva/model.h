@@ -145,6 +145,15 @@ public:
   double objective;
   deque<Link> scheduled_links;
 
+  Solution() {
+    objective = 0.0;
+  }
+
+  Solution (const Solution &o1) {
+    this->objective = o1.objective;
+    this->scheduled_links = o1.scheduled_links;
+  }
+
   void computeObjective() {
     
     for (Link &x : scheduled_links) {
@@ -189,7 +198,7 @@ public:
     return ret;
   }
 
-  double getObjective() {
+  double getObjective() const {
     return objective;
   }
 
