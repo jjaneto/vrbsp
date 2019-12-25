@@ -132,6 +132,8 @@ struct Link {
     MCS = x.MCS;
   }
 
+  friend bool operator==(const Link &o1, const Link &o2);
+
   void setChannel(int ch) {
     this->ch = ch;
     this->bw = whichBw(ch);
@@ -144,7 +146,7 @@ public:
   deque<Link> scheduled_links;
 
   void computeObjective() {
-
+    
     for (Link &x : scheduled_links) {
       int mxDataRate = (x.bw == 20) ? 9 : 10;
       bool go = false;
@@ -153,11 +155,11 @@ public:
         if (SINR[_mcs][bwIdx(x.bw)] > x.SINR) {
           x.MCS = _mcs - 1;
           go = true;
-
+          
           if (x.MCS == -1) {
             x.MCS = 0;
           }
-
+          
           break;
         }
       }
@@ -196,9 +198,6 @@ public:
   }
 
   void insert(const Link &l) {
-    //printf("inserting link id %d, idS %d, idR %d\n", l.id, l._idS, l._idR);
-    //Link aux(l);
-    //printf("aux tem %d %d %d\n", aux.id, aux._idR, aux._idS);
     scheduled_links.emplace_back(l);
     computeInterference();
 
@@ -225,8 +224,6 @@ public:
         u.SINR = interferenceMatrix[u._idS][u._idR] / (u.interference + noise);
       }
       
-      //printf("%d %d %.10lf %.10lf %.10lf\n",u._idS, u._idR, u.interference, noise, interferenceMatrix[u._idS][u._idR]);
-      //printf("sinr foi %.3lf\n", u.SINR);
     }
   }
 
@@ -252,6 +249,8 @@ public:
 
   friend bool operator>(const Solution &o1, const Solution &o2);
 
+  friend bool operator==(const Solution &o1, const Solution &o2);
+  
   Solution &operator=(const Solution &o1);
 };
 

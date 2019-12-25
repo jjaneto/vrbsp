@@ -8,6 +8,58 @@ bool operator>(const Solution &o1, const Solution &o2) {
   return o1.objective > o2.objective;
 }
 
+bool operator==(const Solution &o1, const Solution &o2) {
+
+  if (o1.objective != o2.objective)
+    return false;
+
+  if (o1.scheduled_links.size() != o2.scheduled_link.size())
+    return false;
+
+  bool cond = true;
+
+  const deque<Link> arr1 = o1.getScheduledLinks();
+  const deque<Link> arr2 = o2.getScheduledLinks();
+
+  for (int i = 0; i < int(arr1.size()) && cond; i++) {
+    bool go = false;
+    for (int j = 0; j < int(arr2.size()); j++) {
+      if (arr1[i] == arr2[j]) {
+        go = true;
+      }
+    }
+
+    cond &= go;
+  }
+  
+  return cond;
+}
+
+bool operator==(const Link &o1, const Link &o2) {
+  if (o1._idR != o2._idR)
+    return false;
+
+  if (o1.id != o2.id)
+    return false;
+
+  if (o1.ch != o2.ch)
+    return false;
+
+  if (o1.bw != o2.bw)
+    return false;
+
+  if (o1.interference != o2.interference)
+    return false;
+
+  if (o1.SINR != o2.SINR)
+    return false;
+
+  if (o1.MCS != o2.MCS)
+    return false;
+
+  return true;
+}
+
 Solution &Solution::operator=(const Solution &o1) {
   this->objective = o1.objective;
   this->scheduled_links = o1.scheduled_links;
@@ -31,8 +83,10 @@ void split(Solution &dest, const Solution &src, int ch) {
   printf("split: ch1 %d ch2 %d\n", ch1, ch2);
   deque<Link> links = src.getLinksInChannel(ch);
 
-  if (links.size() < 2)
+  if (links.size() < 2) {
+    printf("nao ha conexoes suficientes no canal %d\n", ch);
     return;
+  }
 
   Link largest1;
   for (const Link &l : links) {
@@ -45,6 +99,15 @@ void split(Solution &dest, const Solution &src, int ch) {
   for (const Link &l : links) {
     if ((l.interference > largest2.interference) && (l.interference != largest1.interference)) {
       largest2 = l;
+    }
+  }
+
+  auto it = links.begin();
+  while (it != links.end()) {
+    if ((*it == largest1) || (*it == largest2)) {
+      it = links.erase(it);
+    } else {
+      it++;
     }
   }
 
@@ -140,13 +203,6 @@ void distanceAndInterference() {
 
       double value = (dist != 0.0) ? powerSender / pow(dist, alfa) : 1e8;
       interferenceMatrix[i][j] = value;
-        
-      //if (i == j) {
-      //  interferenceMatrix[i][j] = 0.0;
-      //} else {
-      //  double value = (dist != 0.0) ? powerSender / pow(dist, alfa) : 1e8;
-      //  interferenceMatrix[i][j] = value;
-      //}
     }
   }
 }
@@ -263,7 +319,7 @@ int main() {
   while (!links.empty()) {
     int idx = rand()%(links.size());
     int link = links[idx];
-
+    printf("link %d\n", link);
     //-------------
     Solution S_copy = S;
     for (auto &el : chToLinks) {
