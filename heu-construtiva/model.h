@@ -130,6 +130,8 @@ struct Link {
     bw = x.bw;
     interference = x.interference;
     MCS = x.MCS;
+    _idR = x._idR;
+    _idS = x._idS;
   }
 
   friend bool operator==(const Link &o1, const Link &o2);
@@ -216,21 +218,26 @@ public:
 
   void computeInterference() {
     for (Link &u : scheduled_links) {
+      printf("___________interference for link %d\n", u.id);
       for (Link &v : scheduled_links) {
-        if (u.id == v.id) {
+        printf("  -> comparing with link %d\n", v.id);
+        if (u == v) {
           //printf("     -> entrei \n");
           continue;
         }
 
-        if (overlap[u.ch][v.ch]) {
+        if (overlap[u.ch - 1][v.ch - 1]) {
+          printf("    ch %d overlaps with %d\n", u.ch - 1, v.ch - 1);
           u.interference += interferenceMatrix[v._idR][u._idS];
         }
       }
 
       if (u.interference == 0.0) {
+        printf("     ==== nao teve interferencia\n");
         u.SINR = 1e8;
       } else {
         u.SINR = interferenceMatrix[u._idS][u._idR] / (u.interference + noise);
+        printf("     ==== SINR eh %.10lf, interference eh %.10lf\n", u.SINR, u.interference);
       }
       
     }

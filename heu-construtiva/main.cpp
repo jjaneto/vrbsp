@@ -36,26 +36,40 @@ bool operator==(const Solution &o1, const Solution &o2) {
 }
 
 bool operator==(const Link &o1, const Link &o2) {
-  if (o1._idR != o2._idR)
+  if (o1._idR != o2._idR) {
+    //printf("%d %d\n", o1._idR, o2._idR);
     return false;
+  }
 
-  if (o1.id != o2.id)
+  if (o1.id != o2.id) {
+    //puts("eeeeeeeeeeeeeeeeeeeeeeeeeeeee");
     return false;
+  }
 
-  if (o1.ch != o2.ch)
+  if (o1.ch != o2.ch) {
+    //puts("uuuuuuuuuuuuuuu");
     return false;
+  }
 
-  if (o1.bw != o2.bw)
+  if (o1.bw != o2.bw) {
+    //puts("iiiiiiiiiiiiiiiiiii");
     return false;
+  }
 
-  if (o1.interference != o2.interference)
+  if (o1.interference != o2.interference) {
+    //puts("KKKK");
     return false;
+  }
+  
+  if (o1.SINR != o2.SINR) {
+    //puts("qqqqqqq");
+    return false;
+  }
 
-  if (o1.SINR != o2.SINR)
+  if (o1.MCS != o2.MCS) {
+    //puts("dont know");
     return false;
-
-  if (o1.MCS != o2.MCS)
-    return false;
+  }
 
   return true;
 }
@@ -71,9 +85,11 @@ inline void decideBest(Solution &f, const Solution &u, const Solution &v) {
     if (u > v) {
       printf("best solution is S1 with objective %.2lf\n", u.getObjective());
     } else if(v > u) {
-      printf("best solution is S2 with objective %.2lf\n", v.getObjective());
+      printf("DIVIDIR FO MELHOR S2 with objective %.2lf\n", v.getObjective());
     }
     f = (u > v) ? u : v;
+  } else {
+    
   }
 }
 
@@ -97,6 +113,7 @@ void split(Solution &dest, const Solution &src, int ch) {
   Link largest1;
   for (const Link &l : links) {
     if (l.interference > largest1.interference) {
+      //printf("?:: link %d\n", l.id);
       largest1 = l;
     }
   }
@@ -104,13 +121,16 @@ void split(Solution &dest, const Solution &src, int ch) {
   Link largest2;
   for (const Link &l : links) {
     if ((l.interference > largest2.interference) && (l.interference != largest1.interference)) {
+      //printf("ahaahahahah link %d\n", l.id);
       largest2 = l;
     }
   }
 
   auto it = links.begin();
   while (it != links.end()) {
+    //printf("visitando link %d (equal %d)\n", it->id, (*it == largest2));
     if ((*it == largest1) || (*it == largest2)) {
+      //puts("passei");
       it = links.erase(it);
     } else {
       it++;
@@ -120,6 +140,7 @@ void split(Solution &dest, const Solution &src, int ch) {
   Solution current(src);
   current.clearChannel(ch);
 
+  printf("apos apagar tem %d links (array links %d)\n", current.getScheduledLinks().size(), links.size());
   largest1.setChannel(ch1);
   largest2.setChannel(ch2);
   current.insert(largest1);
@@ -127,6 +148,7 @@ void split(Solution &dest, const Solution &src, int ch) {
 
   for (const Link &laux : links) { //TODO: choose the links RANDOMLY
     //TODO: Be careful with the repetition of largest1 and largest2
+    printf("     for loop\n");
     Solution copy1(current), copy2(current);
 
     Link lcp1(laux), lcp2(laux);
@@ -139,6 +161,8 @@ void split(Solution &dest, const Solution &src, int ch) {
   }
 
   dest = current;
+
+  printf(" OBJECTIVE OF DEST IS %.2lf\n", dest.getObjective());
   
 }
 
@@ -261,7 +285,7 @@ inline void mapSplitChannels() {
 }
 
 void printSolution(const Solution &check) {
-  printf("Solution is:\n");
+  printf("Solution is: objective %.2lf\n", check.getObjective());
   deque<Link> aux = check.getScheduledLinks();
 
   for (const Link &l : aux) {
@@ -299,6 +323,7 @@ int main() {
       int ch = el.first;
       Link aux(link);
       aux.setChannel(ch);
+      printf("    inserindo link %d (links atuais %d)\n", aux.id, S1.getScheduledLinks().size());
       S1.insert(aux);
       //
       if (whichBw(ch) > 20) {
