@@ -228,7 +228,8 @@ public:
 
         if (overlap[u.ch - 1][v.ch - 1]) {
           printf("    ch %d overlaps with %d\n", u.ch - 1, v.ch - 1);
-          u.interference += interferenceMatrix[v._idR][u._idS];
+          //u.interference += powerSender / pow(distanceMatrix[v._idS][u._idR], alfa);
+          u.interference += interferenceMatrix[v._idS][u._idR];
         }
       }
 
@@ -236,7 +237,8 @@ public:
         printf("     ==== nao teve interferencia\n");
         u.SINR = 1e8;
       } else {
-        u.SINR = interferenceMatrix[u._idS][u._idR] / (u.interference + noise);
+        u.SINR = (powerSender / pow(distanceMatrix[u._idS][u._idR], alfa)) / (u.interference + noise);
+        //u.SINR = interferenceMatrix[u._idS][u._idR] / (u.interference + noise);
         printf("     ==== SINR eh %.10lf, interference eh %.10lf\n", u.SINR, u.interference);
       }
       

@@ -140,7 +140,7 @@ void split(Solution &dest, const Solution &src, int ch) {
   Solution current(src);
   current.clearChannel(ch);
 
-  printf("apos apagar tem %d links (array links %d)\n", current.getScheduledLinks().size(), links.size());
+  printf("apos apagar tem %lu links (array links %lu)\n", current.getScheduledLinks().size(), links.size());
   largest1.setChannel(ch1);
   largest2.setChannel(ch2);
   current.insert(largest1);
@@ -186,7 +186,7 @@ void distanceAndInterference() {
 
       distanceMatrix[i][j] = dist;
 
-      double value = (dist != 0.0) ? powerSender / pow(dist, alfa) : 1e8;
+      double value = (dist != 0.0) ? powerSender / pow(dist, alfa) : 1e9;
       interferenceMatrix[i][j] = value;
     }
   }
@@ -311,6 +311,7 @@ int main() {
   for (int i = 0; i < nConnections; i++)
     links.emplace_back(i);
 
+  int cont = 0;
   while (!links.empty()) {
     int idx = rand()%(links.size());
     int link = links[idx];
@@ -323,7 +324,7 @@ int main() {
       int ch = el.first;
       Link aux(link);
       aux.setChannel(ch);
-      printf("    inserindo link %d (links atuais %d)\n", aux.id, S1.getScheduledLinks().size());
+      printf("    inserindo link %d (links atuais %lu)\n", aux.id, S1.getScheduledLinks().size());
       S1.insert(aux);
       //
       if (whichBw(ch) > 20) {
@@ -343,6 +344,8 @@ int main() {
     swap(links[idx], links.back());
     links.pop_back();
     puts("\n\n");
+    if (++cont == 4)
+      break; //TODO
   }
   return 0;
 }
