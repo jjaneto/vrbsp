@@ -83,9 +83,9 @@ Solution &Solution::operator=(const Solution &o1) {
 inline void decideBest(Solution &f, const Solution &u, const Solution &v) {
   if (u > f || v > f) {
     if (u > v) {
-      printf("best solution is S1 with objective %.2lf\n", u.getObjective());
+      fprintf(stderr, "best solution is S1 with objective %.2lf\n", u.getObjective());
     } else if(v > u) {
-      printf("DIVIDIR FO MELHOR S2 with objective %.2lf\n", v.getObjective());
+      fprintf(stderr, "DIVIDIR FO MELHOR S2 with objective %.2lf\n", v.getObjective());
     }
     f = (u > v) ? u : v;
   } else {
@@ -102,11 +102,11 @@ void updateChannels(const Solution &sol) {
 
 void split(Solution &dest, const Solution &src, int ch) {
   int ch1 = mapChtoCh[ch].first, ch2 = mapChtoCh[ch].second;
-  printf("split: ch1 %d ch2 %d\n", ch1, ch2);
+  fprintf(stderr, "split: ch1 %d ch2 %d\n", ch1, ch2);
   deque<Link> links = src.getLinksInChannel(ch);
 
   if (links.size() < 2) {
-    printf("nao ha conexoes suficientes no canal %d\n", ch);
+    fprintf(stderr, "nao ha conexoes suficientes no canal %d\n", ch);
     return;
   }
 
@@ -140,7 +140,7 @@ void split(Solution &dest, const Solution &src, int ch) {
   Solution current(src);
   current.clearChannel(ch);
 
-  printf("apos apagar tem %lu links (array links %lu)\n", current.getScheduledLinks().size(), links.size());
+  fprintf(stderr, "apos apagar tem %lu links (array links %lu)\n", current.getScheduledLinks().size(), links.size());
   largest1.setChannel(ch1);
   largest2.setChannel(ch2);
   current.insert(largest1);
@@ -148,7 +148,7 @@ void split(Solution &dest, const Solution &src, int ch) {
 
   for (const Link &laux : links) { //TODO: choose the links RANDOMLY
     //TODO: Be careful with the repetition of largest1 and largest2
-    printf("     for loop\n");
+    fprintf(stderr, "     for loop\n");
     Solution copy1(current), copy2(current);
 
     Link lcp1(laux), lcp2(laux);
@@ -162,7 +162,7 @@ void split(Solution &dest, const Solution &src, int ch) {
 
   dest = current;
 
-  printf(" OBJECTIVE OF DEST IS %.2lf\n", dest.getObjective());
+  fprintf(stderr, " OBJECTIVE OF DEST IS %.2lf\n", dest.getObjective());
   
 }
 
@@ -284,13 +284,23 @@ inline void mapSplitChannels() {
   mapChtoCh[37] = {23, 24};    
 }
 
-void printSolution(const Solution &check) {
-  printf("Solution is: objective %.2lf\n", check.getObjective());
+void printFinalSolution(const Solution &check) {
+  fprintf(stderr, "Solution is: objective %.2lf\n", check.getObjective());
   deque<Link> aux = check.getScheduledLinks();
 
   for (const Link &l : aux) {
     printf("LINK id %d\n", l.id);
-    printf("   _idR %d, _idS %d, ch %d, bw %d, interference %.3lf, SINR %.3lf, MCS %d\n", l._idR, l._idS, l.ch, l.bw, l.interference, l.SINR, l.MCS);
+    printf("   _idR %d, _idS %d, distance %.4lf, ch %d, bw %d, interference %.10lf, SINR %.10lf, MCS %d\n", l._idR, l._idS, distanceMatrix[l._idR][l._idS], l.ch, l.bw, l.interference, l.SINR, l.MCS);
+  }
+}
+
+void printSolution(const Solution &check) {
+  fprintf(stderr, "Solution is: objective %.2lf\n", check.getObjective());
+  deque<Link> aux = check.getScheduledLinks();
+
+  for (const Link &l : aux) {
+    fprintf(stderr, "LINK id %d\n", l.id);
+    fprintf(stderr, "   _idR %d, _idS %d, distance %.4lf, ch %d, bw %d, interference %.10lf, SINR %.10lf, MCS %d\n", l._idR, l._idS, distanceMatrix[l._idR][l._idS], l.ch, l.bw, l.interference, l.SINR, l.MCS);
   }
 }
 
@@ -315,16 +325,16 @@ int main() {
   while (!links.empty()) {
     int idx = rand()%(links.size());
     int link = links[idx];
-    printf("link %d\n", link);
+    fprintf(stderr, "link %d\n", link);
     //-------------
     Solution Scopy(S);
     for (auto &el : chToLinks) {
-      printf("--------------> visitando channel %d\n", el.first);
+      fprintf(stderr, "--------------> visitando channel %d\n", el.first);
       Solution S1(S), S2;
       int ch = el.first;
       Link aux(link);
       aux.setChannel(ch);
-      printf("    inserindo link %d (links atuais %lu)\n", aux.id, S1.getScheduledLinks().size());
+      fprintf(stderr, "    inserindo link %d (links atuais %lu)\n", aux.id, S1.getScheduledLinks().size());
       S1.insert(aux);
       //
       if (whichBw(ch) > 20) {
@@ -343,9 +353,16 @@ int main() {
     //-------------
     swap(links[idx], links.back());
     links.pop_back();
-    puts("\n\n");
-    if (++cont == 4)
-      break; //TODO
+    fprintf(stderr, "\n\n");
+    //if (++cont == 4)
+    //break; //TODO
   }
+
+  puts("\n\n");
+  
+  S.computeInterference();
+  S.computeObjective();
+  printFinalSolution(S);
+  printf("best solution with objective %.3lf\n", S.getObjective());
   return 0;
 }

@@ -9,14 +9,11 @@ const int X_c = 0;
 const int Y_c = 1;
 
 int nConnections;
-int B[] = {20, 40, 80, 160};
 int L;
-set<int> channels{25, 42, 43, 44, 45};
 deque<int> links;
 double dataRates[10][4];
 double distanceMatrix[2048][2048], interferenceMatrix[2048][2048];
 double senders[2048][2], receivers[2048][2];
-//double SINR[10][4];
 vector<vector<double>> SINR;
 double powerSender, alfa, noise, ttm;
 map<int, vector<int>> chToLinks;
@@ -181,7 +178,7 @@ public:
     }
 
     for (Link &x : scheduled_links) {
-      //printf("link %d MCS %d bw %d\n", x.id, x.MCS, x.bw);
+      //printf("link %d interference %.10lf SINR %.10lf MCS %d bw %d\n", x.id, x.interference, x.SINR, x.MCS, x.bw);
       objective += dataRates[x.MCS][bwIdx(x.bw)];
     }
   }
@@ -218,31 +215,34 @@ public:
 
   void computeInterference() {
     for (Link &u : scheduled_links) {
-      printf("___________interference for link %d\n", u.id);
+      fprintf(stderr, "___________interference for link %d\n", u.id);
       for (Link &v : scheduled_links) {
-        printf("  -> comparing with link %d\n", v.id);
+        fprintf(stderr, "  -> comparing with link %d\n", v.id);
         if (u == v) {
           //printf("     -> entrei \n");
           continue;
         }
 
         if (overlap[u.ch - 1][v.ch - 1]) {
-          printf("    ch %d overlaps with %d\n", u.ch - 1, v.ch - 1);
+          fprintf(stderr, "    ch %d overlaps with %d\n", u.ch - 1, v.ch - 1);
           //u.interference += powerSender / pow(distanceMatrix[v._idS][u._idR], alfa);
           u.interference += interferenceMatrix[v._idS][u._idR];
         }
       }
 
       if (u.interference == 0.0) {
-        printf("     ==== nao teve interferencia\n");
+        fprintf(stderr, "     ==== nao teve interferencia\n");
         u.SINR = 1e8;
       } else {
         u.SINR = (powerSender / pow(distanceMatrix[u._idS][u._idR], alfa)) / (u.interference + noise);
         //u.SINR = interferenceMatrix[u._idS][u._idR] / (u.interference + noise);
-        printf("     ==== SINR eh %.10lf, interference eh %.10lf\n", u.SINR, u.interference);
-      }
-      
+        fprintf(stderr, "     ==== SINR eh %.10lf, interference eh %.10lf\n", u.SINR, u.interference);
+      }      
     }
+
+    //for (const Link &u : scheduled_links) {
+    //  printf("SINR link %d eh %.10lf\n", u.id, u.SINR);
+    //}
   }
 
   void clearChannel(int ch) {
