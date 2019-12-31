@@ -7,6 +7,7 @@ using namespace std;
 
 const int X_c = 0;
 const int Y_c = 1;
+const double EPS = 1e-9;
 
 int nConnections;
 int L;
@@ -87,11 +88,17 @@ inline int bwIdx(int bw) {
   return 0;
 }
 
+bool double_equals(double a, double b, double epsilon = 0.000000001)
+{
+    return std::abs(a - b) < epsilon;
+}
+
 struct Link {
   int _idR, _idS;
   int id;
   int ch;
   int bw;
+  double distanceSenderReceiver;
   double interference;
   double SINR;
   int MCS;
@@ -101,6 +108,7 @@ struct Link {
     ch = bw = -1;
     interference = SINR = 0.0;
     MCS = -1;
+    distanceSenderReceiver = -1.0;
   }
   
   Link(int id) : _idR(id), _idS(id), id(id) {
@@ -109,6 +117,7 @@ struct Link {
     ch = bw = -1;
     interference = SINR = 0.0;
     MCS = -1;
+    distanceSenderReceiver = distanceMatrix[_idS][_idR];
   }
 
   Link(const Link &x) {
@@ -119,6 +128,8 @@ struct Link {
     _idR = x._idR;
     interference = x.interference;
     MCS = x.MCS;
+    SINR = x.SINR;
+    distanceSenderReceiver = x.distanceSenderReceiver;
   }
 
   void operator=(const Link &x) {
@@ -129,6 +140,8 @@ struct Link {
     MCS = x.MCS;
     _idR = x._idR;
     _idS = x._idS;
+    distanceSenderReceiver = x.distanceSenderReceiver;
+    SINR = x.SINR;
   }
 
   friend bool operator==(const Link &o1, const Link &o2);
@@ -136,6 +149,12 @@ struct Link {
   void setChannel(int ch) {
     this->ch = ch;
     this->bw = whichBw(ch);
+  }
+
+  void printLink() const {
+    printf("============= COMPARE =============\n");
+    printf("link %d idS %d idR %d distance %.5lf ch %d, bw %d, interference %.10lf, SINR %.10lf, MCS %d\n", id, _idR, _idS, distanceSenderReceiver, ch, bw, interference, SINR, MCS);
+    printf("=============== END ===============\n");
   }
 };
 
@@ -154,7 +173,7 @@ public:
   }
 
   void computeObjective() {
-    
+    objective = 0.0;
     for (Link &x : scheduled_links) {
       int mxDataRate = (x.bw == 20) ? 9 : 10;
       bool go = false;
@@ -217,6 +236,9 @@ public:
     for (Link &u : scheduled_links) {
       fprintf(stderr, "___________interference for link %d\n", u.id);
       for (Link &v : scheduled_links) {
+
+        //assert(double_equals(v.distanceSenderReceiver, -1.0));
+        
         fprintf(stderr, "  -> comparing with link %d\n", v.id);
         if (u == v) {
           //printf("     -> entrei \n");
@@ -225,24 +247,23 @@ public:
 
         if (overlap[u.ch - 1][v.ch - 1]) {
           fprintf(stderr, "    ch %d overlaps with %d\n", u.ch - 1, v.ch - 1);
-          //u.interference += powerSender / pow(distanceMatrix[v._idS][u._idR], alfa);
+          //u.interference += powerSender / pow(u.distanceSenderReceiver, alfa);
           u.interference += interferenceMatrix[v._idS][u._idR];
         }
       }
 
-      if (u.interference == 0.0) {
+      if (double_equals(u.interference, 0.0)) {
         fprintf(stderr, "     ==== nao teve interferencia\n");
-        u.SINR = 1e8;
+        u.SINR = 1e9;
       } else {
         u.SINR = (powerSender / pow(distanceMatrix[u._idS][u._idR], alfa)) / (u.interference + noise);
-        //u.SINR = interferenceMatrix[u._idS][u._idR] / (u.interference + noise);
         fprintf(stderr, "     ==== SINR eh %.10lf, interference eh %.10lf\n", u.SINR, u.interference);
-      }      
+      }
     }
 
-    //for (const Link &u : scheduled_links) {
-    //  printf("SINR link %d eh %.10lf\n", u.id, u.SINR);
-    //}
+    for (const Link &u : scheduled_links) {
+      printf("SINR link %d eh %.10lf interference %.10lf\n", u.id, u.SINR, u.interference);
+    }
   }
 
   void clearChannel(int ch) {

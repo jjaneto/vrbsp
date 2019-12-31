@@ -71,6 +71,10 @@ bool operator==(const Link &o1, const Link &o2) {
     return false;
   }
 
+  if (o1.distanceSenderReceiver != o2.distanceSenderReceiver) {
+    return false;
+  }
+
   return true;
 }
 
@@ -109,28 +113,42 @@ void split(Solution &dest, const Solution &src, int ch) {
     fprintf(stderr, "nao ha conexoes suficientes no canal %d\n", ch);
     return;
   }
-
+  
   Link largest1;
   for (const Link &l : links) {
     if (l.interference > largest1.interference) {
-      //printf("?:: link %d\n", l.id);
       largest1 = l;
     }
   }
 
+  //FIXME: There might be two links with the same interference...
+  //Therefore, the actual comparison for largest2 variable can give
+  //Wrong results.
+
+  //Link largest2;
+  //for (const Link &l : links) {
+  //  if ((l.interference > largest2.interference) && (l.interference != largest1.interference)) {
+  //    largest2 = l;
+  //  }
+  //}
+
   Link largest2;
   for (const Link &l : links) {
-    if ((l.interference > largest2.interference) && (l.interference != largest1.interference)) {
-      //printf("ahaahahahah link %d\n", l.id);
+    if (!(l == largest1) && (l.interference > largest2.interference)) {
       largest2 = l;
     }
   }
 
+  
+
+
+  largest1.printLink();
+  largest2.printLink();
+  
+
   auto it = links.begin();
   while (it != links.end()) {
-    //printf("visitando link %d (equal %d)\n", it->id, (*it == largest2));
     if ((*it == largest1) || (*it == largest2)) {
-      //puts("passei");
       it = links.erase(it);
     } else {
       it++;
@@ -291,6 +309,9 @@ void printFinalSolution(const Solution &check) {
   for (const Link &l : aux) {
     printf("LINK id %d\n", l.id);
     printf("   _idR %d, _idS %d, distance %.4lf, ch %d, bw %d, interference %.10lf, SINR %.10lf, MCS %d\n", l._idR, l._idS, distanceMatrix[l._idR][l._idS], l.ch, l.bw, l.interference, l.SINR, l.MCS);
+    //printf("============= COMPARE =============\n");
+    //l.printLink();
+    //printf("=============== END ===============\n");
   }
 }
 
@@ -348,7 +369,7 @@ int main() {
     if (Scopy > S) {
       S = Scopy;
     }
-
+    
     printSolution(S);
     //-------------
     swap(links[idx], links.back());
