@@ -284,6 +284,12 @@ public:
     }
   }
 
+  void insertLinks(vector<Link> &v) {
+    for (int i = 0; i < int(v.size()); i++) {
+      insert(v[i]);
+    }
+  }
+
   friend bool operator<(const Solution &o1, const Solution &o2);
 
   friend bool operator>(const Solution &o1, const Solution &o2);

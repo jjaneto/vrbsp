@@ -17,3 +17,5 @@ instancias/**
 **/Makefile
 out*_*
 heu-construtiva/
+**/*~
+**/t
