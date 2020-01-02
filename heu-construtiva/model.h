@@ -234,36 +234,36 @@ public:
 
   void computeInterference() {
     for (Link &u : scheduled_links) {
-      fprintf(stderr, "___________interference for link %d\n", u.id);
+      //fprintf(stderr, "___________interference for link %d\n", u.id);
       for (Link &v : scheduled_links) {
 
         //assert(double_equals(v.distanceSenderReceiver, -1.0));
         
-        fprintf(stderr, "  -> comparing with link %d\n", v.id);
+        //fprintf(stderr, "  -> comparing with link %d\n", v.id);
         if (u == v) {
           //printf("     -> entrei \n");
           continue;
         }
 
         if (overlap[u.ch - 1][v.ch - 1]) {
-          fprintf(stderr, "    ch %d overlaps with %d\n", u.ch - 1, v.ch - 1);
+          //fprintf(stderr, "    ch %d overlaps with %d\n", u.ch - 1, v.ch - 1);
           //u.interference += powerSender / pow(u.distanceSenderReceiver, alfa);
           u.interference += interferenceMatrix[v._idS][u._idR];
         }
       }
 
       if (double_equals(u.interference, 0.0)) {
-        fprintf(stderr, "     ==== nao teve interferencia\n");
+        //fprintf(stderr, "     ==== nao teve interferencia\n");
         u.SINR = 1e9;
       } else {
         u.SINR = (powerSender / pow(distanceMatrix[u._idS][u._idR], alfa)) / (u.interference + noise);
-        fprintf(stderr, "     ==== SINR eh %.10lf, interference eh %.10lf\n", u.SINR, u.interference);
+        //fprintf(stderr, "     ==== SINR eh %.10lf, interference eh %.10lf\n", u.SINR, u.interference);
       }
     }
 
-    for (const Link &u : scheduled_links) {
-      printf("SINR link %d eh %.10lf interference %.10lf\n", u.id, u.SINR, u.interference);
-    }
+    //for (const Link &u : scheduled_links) {
+    //  printf("SINR link %d eh %.10lf interference %.10lf\n", u.id, u.SINR, u.interference);
+    //}
   }
 
   void clearChannel(int ch) {
