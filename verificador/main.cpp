@@ -79,6 +79,19 @@ Solution &Solution::operator=(const Solution &o1) {
   return *this;
 }
 
+void printFinalSolution(const Solution &check) {
+  printf(stderr, "Solution is: objective %.2lf\n", check.getObjective());
+  deque<Link> aux = check.getScheduledLinks();
+
+  for (const Link &l : aux) {
+    printf("LINK id %d\n", l.id);
+    printf("   _idR %d, _idS %d, distance %.4lf, ch %d, bw %d, interference %.10lf, SINR %.10lf, MCS %d\n", l._idR, l._idS, distanceMatrix[l._idR][l._idS], l.ch, l.bw, l.interference, l.SINR, l.MCS);
+    //printf("============= COMPARE =============\n");
+    //l.printLink();
+    //printf("=============== END ===============\n");
+  }
+}
+
 
 int main() {
   // O formato do arquivo de entrada eh [link-id canal]
@@ -93,6 +106,6 @@ int main() {
   Solution F;
   F.insertLinks(links);
 
-  
+  printFinalSolution(F);
   return 0;
 }
