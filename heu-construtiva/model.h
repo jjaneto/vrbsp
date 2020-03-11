@@ -1,7 +1,18 @@
 #ifndef MODEL_H
 #define MODEL_H
 
+#ifdef __APPLE__
+#include <iostream>
+#include <cstdio>
+#include <deque>
+#include <vector>
+#include <stack>
+#include <unordered_map>
+#include <set>
+#include <map>
+#else
 #include <bits/stdc++.h>
+#endif
 
 using namespace std;
 
@@ -172,14 +183,21 @@ public:
     this->scheduled_links = o1.scheduled_links;
   }
 
-  void computeObjective() {
+  void computeObjective(bool show = false) {
     objective = 0.0;
+    //computeInterference();
     for (Link &x : scheduled_links) {
       int mxDataRate = (x.bw == 20) ? 9 : 10;
       bool go = false;
       
       for (int _mcs = 0; _mcs < mxDataRate; _mcs++) {
+        if (show) {
+          printf("will compare %.3lf and %.3lf (_mcs %d, bw %d, idx bw %d)\n", SINR[_mcs][bwIdx(x.bw)], x.SINR, _mcs, x.bw, bwIdx(x.bw));
+        }
         if (SINR[_mcs][bwIdx(x.bw)] > x.SINR) {
+          if (show) {
+            printf("     uhu!\n");
+          }
           x.MCS = _mcs - 1;
           go = true;
           
@@ -188,16 +206,29 @@ public:
           }
           
           break;
+        } else {
+          if (show) {
+            printf("     ouch!\n");
+          }
         }
       }
 
       if (!go) {
+        if (show) {
+          printf("enter here link %d mxDataRate %d\n", x.id, mxDataRate);
+        }
         x.MCS = mxDataRate - 1;
+      } else {
+        if (show) {
+          printf("NOT enter here link %d mxDataRate %d\n", x.id, mxDataRate);
+        }
       }
     }
 
     for (Link &x : scheduled_links) {
-      //printf("link %d interference %.10lf SINR %.10lf MCS %d bw %d\n", x.id, x.interference, x.SINR, x.MCS, x.bw);
+      if (show) {
+        printf("===> link %d interference %.10lf SINR %.10lf MCS %d bw %d GIVES %.3lf\n", x.id, x.interference, x.SINR, x.MCS, x.bw, dataRates[x.MCS][bwIdx(x.bw)]);
+      }
       objective += dataRates[x.MCS][bwIdx(x.bw)];
     }
   }
@@ -227,18 +258,18 @@ public:
   void insert(const Link &l) {
     scheduled_links.emplace_back(l);
     computeInterference();
-
+    
     objective = 0.0;
     computeObjective();
   }
 
   void computeInterference() {
     for (Link &u : scheduled_links) {
+      u.interference = 0.0;
+      u.SINR = 0.0;
       //fprintf(stderr, "___________interference for link %d\n", u.id);
       for (Link &v : scheduled_links) {
 
-        //assert(double_equals(v.distanceSenderReceiver, -1.0));
-        
         //fprintf(stderr, "  -> comparing with link %d\n", v.id);
         if (u == v) {
           //printf("     -> entrei \n");

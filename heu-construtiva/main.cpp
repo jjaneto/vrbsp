@@ -85,8 +85,6 @@ inline void decideBest(Solution &f, const Solution &u, const Solution &v) {
       //fprintf(stderr, "DIVIDIR FO MELHOR S2 with objective %.2lf\n", v.getObjective());
     }
     f = (u > v) ? u : v;
-  } else {
-    
   }
 }
 
@@ -97,9 +95,10 @@ void updateChannels(const Solution &sol) {
   }
 }
 
-void split(Solution &dest, const Solution &src, int ch) {
+void split(Solution &dest, Solution &src, int ch) {
   int ch1 = mapChtoCh[ch].first, ch2 = mapChtoCh[ch].second;
   //fprintf(stderr, "split: ch1 %d ch2 %d\n", ch1, ch2);
+  src.computeObjective();
   deque<Link> links = src.getLinksInChannel(ch);
 
   if (links.size() < 2) {
@@ -114,17 +113,6 @@ void split(Solution &dest, const Solution &src, int ch) {
     }
   }
 
-  //FIXME: There might be two links with the same interference...
-  //Therefore, the actual comparison for largest2 variable can give
-  //Wrong results.
-
-  //Link largest2;
-  //for (const Link &l : links) {
-  //  if ((l.interference > largest2.interference) && (l.interference != largest1.interference)) {
-  //    largest2 = l;
-  //  }
-  //}
-
   Link largest2;
   for (const Link &l : links) {
     if (!(l == largest1) && (l.interference > largest2.interference)) {
@@ -134,7 +122,6 @@ void split(Solution &dest, const Solution &src, int ch) {
 
   //largest1.printLink();
   //largest2.printLink();
-  
 
   auto it = links.begin();
   while (it != links.end()) {
@@ -148,7 +135,7 @@ void split(Solution &dest, const Solution &src, int ch) {
   Solution current(src);
   current.clearChannel(ch);
 
-  //fprintf(stderr, "apos apagar tem %lu links (array links %lu)\n", current.getScheduledLinks().size(), links.size());
+  fprintf(stderr, "apos apagar tem %lu links (array links %lu)\n", current.getScheduledLinks().size(), links.size());
   largest1.setChannel(ch1);
   largest2.setChannel(ch2);
   current.insert(largest1);
@@ -174,25 +161,8 @@ void split(Solution &dest, const Solution &src, int ch) {
     swap(randomPos[idx], randomPos.back());
     randomPos.pop_back();    
   }
-  
-  //for (const Link &laux : links) { //TODO: choose the links RANDOMLY
-  //  //TODO: Be careful with the repetition of largest1 and largest2
-  //  //fprintf(stderr, "     for loop\n");
-  //  Solution copy1(current), copy2(current);
-  //
-  //  Link lcp1(laux), lcp2(laux);
-  //  lcp1.setChannel(ch1), lcp2.setChannel(ch2);
-  //
-  //  copy1.insert(lcp1);
-  //  copy2.insert(lcp2);
-  //
-  //  current = (copy1 > copy2) ? copy1 : copy2;
-  //}
 
   dest = current;
-
-  //fprintf(stderr, " OBJECTIVE OF DEST IS %.2lf\n", dest.getObjective());
-  
 }
 
 double distance (double X_si, double Y_si, double X_ri, double Y_ri) {
@@ -313,10 +283,11 @@ inline void mapSplitChannels() {
   mapChtoCh[37] = {23, 24};    
 }
 
-void printFinalSolution(const Solution &check) {
+void printFinalSolution(Solution &check) {
   //fprintf(stderr, "Solution is: objective %.2lf\n", check.getObjective());
   deque<Link> aux = check.getScheduledLinks();
 
+  //check.computeObjective(true);
   for (const Link &l : aux) {
     printf("LINK id %d\n", l.id);
     printf("   _idR %d, _idS %d, distance %.4lf, ch %d, bw %d, interference %.10lf, SINR %.10lf, MCS %d\n", l._idR, l._idS, distanceMatrix[l._idR][l._idS], l.ch, l.bw, l.interference, l.SINR, l.MCS);
@@ -350,6 +321,42 @@ int main() {
   mapSplitChannels();
   //-----------------------
 
+  /*for (int i = 0; i < 21; i++) { //FIXME
+    Solution Scopy(S);
+    int link = i;
+
+    if (i == 20) {
+      Link aux(link);
+      aux.setChannel(44);
+      Scopy.insert(aux);
+    } else {
+    
+      for (auto &el : chToLinks) {
+        fprintf(stderr, "--------------> visitando channel %d\n", el.first);
+        Solution S1(S), S2;
+        int ch = el.first;
+        Link aux(link);
+        aux.setChannel(ch);
+        fprintf(stderr, "    inserindo link %d no canal %d (links atuais %lu)\n", aux.id, ch, S1.getScheduledLinks().size());
+        S1.insert(aux);
+        //
+        if (whichBw(ch) > 20) {
+          split(S2, S1, ch);
+        }
+      
+        //
+        decideBest(Scopy, S1, S2);
+        //
+      }
+    }
+    
+    if (Scopy > S) {
+      S = Scopy;
+    }
+    
+    printSolution(S);
+    }*/
+
   for (int i = 0; i < nConnections; i++)
     links.emplace_back(i);
   
@@ -366,7 +373,7 @@ int main() {
       int ch = el.first;
       Link aux(link);
       aux.setChannel(ch);
-      //fprintf(stderr, "    inserindo link %d (links atuais %lu)\n", aux.id, S1.getScheduledLinks().size());
+      //fprintf(stderr, "    inserindo link %d no canal %d (links atuais %lu)\n", aux.id, ch, S1.getScheduledLinks().size());
       S1.insert(aux);
       //
       if (whichBw(ch) > 20) {
@@ -395,6 +402,7 @@ int main() {
   //S.computeInterference();
   //S.computeObjective();
   //printFinalSolution(S);
-  printf("best solution with objective %.3lf\n", S.getObjective());
+  //printf("best solution with objective %.3lf\n", S.getObjective());
+  printf("%.3lf\n", S.getObjective());
   return 0;
 }

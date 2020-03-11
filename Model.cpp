@@ -72,6 +72,13 @@ Model::Model(std::string file, type formulation, int number, std::string outputF
   createBigM();
 //
 
+  for (int i = 0; i < 10; i++) {
+    for (int j = 0; j < 4; j++) {
+      printf("%.3lf ", SINR[i][j]);
+    }
+    puts("");
+  }
+
 //  try {
 //    env = new GRBEnv();
 //    model = new GRBModel(*env);

@@ -20,7 +20,7 @@ include_directories(${GUROBI_INCLUDE_DIRECTORY})
 if ("${CMAKE_SYSTEM}" MATCHES "Linux")
   set(GUROBI_LIB_DIRECTORY "~/Downloads/gurobi900/linux64/lib")
 elseif (APPLE)
-  set(GUROBI_LIB_DIRECTORY "/Library/gurobi811/mac64/lib/")
+  set(GUROBI_LIB_DIRECTORY "/Library/gurobi900/mac64/lib/")
 endif ()
 
 # adicionar library gurobi
