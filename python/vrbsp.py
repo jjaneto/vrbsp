@@ -8,6 +8,7 @@ from gurobipy import GRB
 
 overlap = []
 nChannels = 45
+count_inst = 0
 
 
 def converTableToMW(SINR, SINR_):
@@ -302,6 +303,7 @@ def modelF1_v2(
     powerSender,
     noise,
 ):
+    global count_inst
     try:
         # Create a new model
         model = gp.Model("vrbsp")
@@ -315,12 +317,27 @@ def modelF1_v2(
         )
         defineObjectiveFunction(model, model_type, nConnections, dataRates, x)
 
+        file_name = "out-formatted" + str(count_inst) + ".txt"
+        model.write("./formulation.lp")
+        model.setParam("LogFile", file_name)
         model.setParam(GRB.Param.LogToConsole, False)
         model.optimize()
         with open("objectives.txt", "a") as obj_file:
             obj_file.write(str(model.getAttr(GRB.Attr.ObjVal)) + "\n")
-        model.write("./formulation.lp")
         model.write("./solution.sol")
+
+        # conn, canal, bw, interference
+        with open(file_name, "a") as f:
+            for i in range(nConnections):
+                for c in range(nChannels):
+                    nMCS = 10 if cToB(c) != 0 else 9
+                    for m in range(nMCS):
+                        if x[i, c, m].getAttr("x") == 1.0:
+                            # print(str(i) + " to na " + str(b) + " " + str(m))
+                            f.write(
+                                "%d %d %d %d %.12lf\n"
+                                % (i, c, cToB(c), m, I[i].getAttr("x"))
+                            )
 
     except gp.GurobiError as e:
         print("Error code " + str(e.errno) + ": " + str(e))
@@ -344,14 +361,16 @@ def loadOverlap():
 
 if __name__ == "__main__":
     loadOverlap()
-    for idx in range(30):
+    for idx in range(2, 7):
         receivers, senders, dataRates = [[]], [[]], [[]]
         SINR, spectrums = [], []
         distanceMatrix, interferenceMatrix = [[]], [[]]
         M_ij = []
 
+        # inst = idx + 1
         inst = idx + 1
-        path = "./D10000X10000/U_128/U_128_" + str(inst) + ".txt"
+        count_inst = inst
+        path = "./D10000X10000/U_256/U_256_" + str(inst) + ".txt"
         noise, powerSender, alfa, nConnections = loadData(
             path,
             receivers,
