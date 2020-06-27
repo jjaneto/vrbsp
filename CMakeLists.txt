@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+#cmake_minimum_required(VERSION 3.14)
 project(vrbsp)
 
 set(CMAKE_CXX_STANDARD 11)
@@ -8,7 +8,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -std=c++11 -g -D_GLIBCXX_USE_CXX11_
 
 # declara header gurobi directory
 if ("${CMAKE_SYSTEM}" MATCHES "Linux")
-  set(GUROBI_INCLUDE_DIRECTORY "~/Downloads/gurobi900/linux64/include")
+  set(GUROBI_INCLUDE_DIRECTORY "~/gurobi902/linux64/include")
 elseif (APPLE)
   set(GUROBI_INCLUDE_DIRECTORY "/Library/gurobi811/mac64/include")
 endif ()
@@ -18,7 +18,7 @@ include_directories(${GUROBI_INCLUDE_DIRECTORY})
 
 # declara library gurobi directory
 if ("${CMAKE_SYSTEM}" MATCHES "Linux")
-  set(GUROBI_LIB_DIRECTORY "~/Downloads/gurobi900/linux64/lib")
+  set(GUROBI_LIB_DIRECTORY "~/gurobi902/linux64/lib")
 elseif (APPLE)
   set(GUROBI_LIB_DIRECTORY "/Library/gurobi900/mac64/lib/")
 endif ()
@@ -27,7 +27,8 @@ endif ()
 link_directories(${GUROBI_LIB_DIRECTORY})
 
 # criar executavel
-set(SOURCE_FILES ${GUROBI_INCLUDE_DIRECTORY}/gurobi_c++.h Model.h Model.cpp Structures.h main.cpp)
+#set(SOURCE_FILES ${GUROBI_INCLUDE_DIRECTORY}/gurobi_c++.h Model.h Model.cpp Structures.h main.cpp)
+set(SOURCE_FILES ${GUROBI_INCLUDE_DIRECTORY}/gurobi_c++.h diet_c++.cpp)
 add_executable(vrbsp ${SOURCE_FILES})
 
 # adicionar libraries

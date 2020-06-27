@@ -17,3 +17,4 @@ instancias/**
 **/Makefile
 out*_*
 heu-construtiva/
+c-make-build/
