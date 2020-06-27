@@ -66,7 +66,7 @@ def cToB(c):
     return 3
 
 
-def computeInterference(c, nConnections):
+def computeInterference(c, nConnections, interferenceMatrix):
     ret = 0.0
     for i in range(nConnections):
         if c != i:
@@ -75,9 +75,9 @@ def computeInterference(c, nConnections):
     return ret
 
 
-def createBigM(M_ij, nConnections):
+def createBigM(M_ij, nConnections, interferenceMatrix):
     for c in range(nConnections):
-        value = computeInterference(c, nConnections)
+        value = computeInterference(c, nConnections, interferenceMatrix)
         M_ij.append(value)
 
 
@@ -112,13 +112,6 @@ def loadData(
         spectrums.append(int(aux[6]))
         spectrums.append(int(aux[7]))
         spectrums.append(int(aux[8]))
-
-        # eu_li = str(nConnections) + " " + str(ttm) + " " + str(alfa) + " "
-        # eu_li += str(noise) + " " + str(powerSender) + " " + str(nSpectrums) + " "
-        # for i in range(3):
-        #    eu_li += str(spectrums[i]) + " "
-        #
-        # print(eu_li)
 
         if noise != 0:
             noise = converDBMToMW(noise)
@@ -169,7 +162,7 @@ def loadData(
             alfa,
         )
 
-        createBigM(M_ij, nConnections)
+        createBigM(M_ij, nConnections, interferenceMatrix)
 
     return noise, powerSender, alfa, nConnections
 
@@ -180,11 +173,13 @@ def defineVariables(model, model_type, nConnections, x, y, z, w, I, I_c):
     for i in range(nConnections):
         for c in range(nChannels):
             name = "x[" + str(i) + "][" + str(c) + "]"
-            x[i, c] = model.addVar(0.0, 1.0, 1.0, GRB.BINARY, name)
+            x[i, c] = model.addVar(0.0, 1.0, 0.0, GRB.BINARY, name)
 
     for i in range(nConnections):
         for b in range(4):
-            for m in range(10):
+            MCS = 10 if b != 0 else 9
+            for m in range(MCS):
+                name = "y[" + str(i) + "][" + str(b) + "][" + str(m) + "]"
                 y[i, b, m] = model.addVar(0.0, 1.0, 1.0, GRB.BINARY, name)
 
     for i in range(nConnections):
@@ -255,8 +250,8 @@ def defineConstraints(
 
     # Constraint 2
     for b in range(4):
-        expr1, expr2 = gp.LinExpr(), gp.LinExpr()
         for i in range(nConnections):
+            expr1, expr2 = gp.LinExpr(), gp.LinExpr()
             nMCS = 10 if b != 0 else 9
             for m in range(nMCS):
                 expr1 += y[i, b, m]
@@ -339,6 +334,7 @@ def modelF1_v2(
     powerSender,
     noise,
 ):
+    global nChannels
     try:
         # Create a new model
         model = gp.Model("vrbsp")
@@ -363,12 +359,36 @@ def modelF1_v2(
         )
         defineObjectiveFunction(model, model_type, nConnections, dataRates, y)
 
+        # model.write("./formulation.lp")
         model.setParam(GRB.Param.LogToConsole, False)
         model.optimize()
-        with open("objectives.txt", "a") as obj_file:
-            obj_file.write(str(model.getAttr(GRB.Attr.ObjVal)) + "\n")
-        model.write("./formulation.lp")
-        model.write("./solution.sol")
+        with open("objectives_true.txt", "a") as obj_file:
+            obj_file.write(str(model.getAttr(GRB.Attr.ObjVal)))
+            obj_file.write("\n")
+            # obj_file.write(str(model.getAttr(GRB.Attr.ObjVal)) + " ")
+            # obj_file.write(str(model.getAttr(GRB.Attr.MIPGap)) + "\n")
+        # model.write("./solution.sol")
+
+        # conn, canal, bw, interference
+        # for i in range(nConnections):
+        #     for b in range(4):
+        #         nMCS = 10 if b != 0 else 9
+        #         for m in range(nMCS):
+        #             if y[i, b, m].getAttr("x") == 1.0:
+        #                 # print(str(i) + " to na " + str(b) + " " + str(m))
+        #                 normal = False
+        #                 for c in range(nChannels):
+        #                     if x[i, c].getAttr("x") == 1.0:
+        #                         normal = True
+        #                         print(
+        #                             "%d %d %d %d %.12lf"
+        #                             % (i, c, b, m, I[i].getAttr("x"))
+        #                         )
+        #                         # print(i, c, b, m, I[i].getAttr("x"))
+        # 
+        #                 if not normal:
+        #                     print("PROBLEMA")
+        #                     exit()
 
     except gp.GurobiError as e:
         print("Error code " + str(e.errno) + ": " + str(e))
@@ -392,15 +412,14 @@ def loadOverlap():
 
 if __name__ == "__main__":
     loadOverlap()
-    instancia = 64
-    for idx in range(30):
+    for idx in range(1):
         receivers, senders, dataRates = [[]], [[]], [[]]
         SINR, spectrums = [], []
         distanceMatrix, interferenceMatrix = [[]], [[]]
         M_ij = []
 
         inst = idx + 1
-        path = "./D10000X10000/U_64/U_64_" + str(inst) + ".txt"
+        path = "./D10000X10000/U_256/U_256_" + str(inst) + ".txt"
         noise, powerSender, alfa, nConnections = loadData(
             path,
             receivers,
