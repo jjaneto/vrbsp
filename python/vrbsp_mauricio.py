@@ -419,7 +419,7 @@ if __name__ == "__main__":
         M_ij = []
 
         inst = idx + 1
-        path = "./D10000X10000/U_256/U_256_" + str(inst) + ".txt"
+        path = "./D10000x10000/U_256/U_256_" + str(inst) + ".txt"
         noise, powerSender, alfa, nConnections = loadData(
             path,
             receivers,

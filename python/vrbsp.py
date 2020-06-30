@@ -347,7 +347,7 @@ def modelF1_v2(
 
 
 def loadOverlap():
-    with open("/Users/joaquimnt_/Desktop/temp/overlap.txt", "r") as f:
+    with open("./overlap.txt", "r") as f:
         idx = 0
         for line in f:
             aux = line.split(",")
@@ -361,7 +361,7 @@ def loadOverlap():
 
 if __name__ == "__main__":
     loadOverlap()
-    for idx in range(2, 7):
+    for idx in range(12, 15):
         receivers, senders, dataRates = [[]], [[]], [[]]
         SINR, spectrums = [], []
         distanceMatrix, interferenceMatrix = [[]], [[]]
@@ -370,7 +370,7 @@ if __name__ == "__main__":
         # inst = idx + 1
         inst = idx + 1
         count_inst = inst
-        path = "./D10000X10000/U_256/U_256_" + str(inst) + ".txt"
+        path = "./D10000x10000/U_256/U_256_" + str(inst) + ".txt"
         noise, powerSender, alfa, nConnections = loadData(
             path,
             receivers,
