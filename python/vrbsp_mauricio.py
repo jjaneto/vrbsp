@@ -165,6 +165,11 @@ def loadData(
 
         createBigM(M_ij, nConnections, interferenceMatrix)
 
+    #         for i in range(10):
+    #             for j in range(4):
+    #                 print("%.12f " % (SINR[i][j]), end="")
+    #             print()
+
     return noise, powerSender, alfa, nConnections
 
 
@@ -186,7 +191,7 @@ def defineVariables(model, model_type, nConnections, x, y, z, w, I, I_c):
     for i in range(nConnections):
         for c in range(nChannels):
             name = "z[" + str(i) + "][" + str(c) + "]"
-            z[i, c] = model.addVar(0.0, GRB.INFINITY, 0.0, GRB.INTEGER, name)
+            z[i, c] = model.addVar(0.0, GRB.INFINITY, 0.0, GRB.CONTINUOUS, name)
 
     for i in range(nConnections):
         name = "I[" + str(i) + "]"
@@ -361,14 +366,16 @@ def modelF1_v2(
         defineObjectiveFunction(model, model_type, nConnections, dataRates, y)
 
         file_name = "out-formatted" + str(count_inst) + ".txt"
-        # model.write("./formulation.lp")
+        model.write("./formulation.lp")
         model.setParam(GRB.Param.LogToConsole, False)
-        model.setParam("LogFile", file_name)
+        # model.setParam("LogFile", file_name)
         model.optimize()
         with open("objectives_true.txt", "a") as obj_file:
             obj_file.write(str(model.getAttr(GRB.Attr.ObjVal)))
             obj_file.write("\n")
-        # model.write("./solution.sol")
+            # obj_file.write(str(model.getAttr(GRB.Attr.ObjVal)) + " ")
+            # obj_file.write(str(model.getAttr(GRB.Attr.MIPGap)) + "\n")
+        model.write("./solution.sol")
 
         # conn, canal, bw, interference
         with open(file_name, "a") as f:

@@ -180,7 +180,7 @@ def defineVariables(model, model_type, nConnections, x, z, w, I, I_c):
     for i in range(nConnections):
         for c in range(nChannels):
             name = "z[" + str(i) + "][" + str(c) + "]"
-            z[i, c] = model.addVar(0.0, GRB.INFINITY, 0.0, GRB.INTEGER, name)
+            z[i, c] = model.addVar(0.0, GRB.INFINITY, 0.0, GRB.CONTINUOUS, name)
 
     for i in range(nConnections):
         name = "I[" + str(i) + "]"
