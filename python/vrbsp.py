@@ -114,13 +114,6 @@ def loadData(
         spectrums.append(int(aux[7]))
         spectrums.append(int(aux[8]))
 
-        # eu_li = str(nConnections) + " " + str(ttm) + " " + str(alfa) + " "
-        # eu_li += str(noise) + " " + str(powerSender) + " " + str(nSpectrums) + " "
-        # for i in range(3):
-        #    eu_li += str(spectrums[i]) + " "
-        #
-        # print(eu_li)
-
         if noise != 0:
             noise = converDBMToMW(noise)
 
@@ -170,11 +163,6 @@ def loadData(
             alfa,
         )
 
-        # for i in range(nConnections):
-        #     for j in range(nConnections):
-        #         print(interferenceMatrix[i][j], end=" ")
-        #     print()
-
         createBigM(M_ij, nConnections)
 
     return noise, powerSender, alfa, nConnections
@@ -192,7 +180,7 @@ def defineVariables(model, model_type, nConnections, x, z, w, I, I_c):
     for i in range(nConnections):
         for c in range(nChannels):
             name = "z[" + str(i) + "][" + str(c) + "]"
-            z[i, c] = model.addVar(0.0, 1.0, 0.0, GRB.BINARY, name)
+            z[i, c] = model.addVar(0.0, GRB.INFINITY, 0.0, GRB.INTEGER, name)
 
     for i in range(nConnections):
         name = "I[" + str(i) + "]"
@@ -318,13 +306,14 @@ def modelF1_v2(
         defineObjectiveFunction(model, model_type, nConnections, dataRates, x)
 
         file_name = "out-formatted" + str(count_inst) + ".txt"
-        model.write("./formulation.lp")
+        # model.write("./formulation.lp")
         model.setParam("LogFile", file_name)
         model.setParam(GRB.Param.LogToConsole, False)
+        model.setParam("TimeLimit", 3600)
         model.optimize()
         with open("objectives.txt", "a") as obj_file:
             obj_file.write(str(model.getAttr(GRB.Attr.ObjVal)) + "\n")
-        model.write("./solution.sol")
+        # model.write("./solution.sol")
 
         # conn, canal, bw, interference
         with open(file_name, "a") as f:
@@ -333,7 +322,6 @@ def modelF1_v2(
                     nMCS = 10 if cToB(c) != 0 else 9
                     for m in range(nMCS):
                         if x[i, c, m].getAttr("x") == 1.0:
-                            # print(str(i) + " to na " + str(b) + " " + str(m))
                             f.write(
                                 "%d %d %d %d %.12lf\n"
                                 % (i, c, cToB(c), m, I[i].getAttr("x"))
@@ -361,7 +349,7 @@ def loadOverlap():
 
 if __name__ == "__main__":
     loadOverlap()
-    for idx in range(12, 15):
+    for idx in range(30):
         receivers, senders, dataRates = [[]], [[]], [[]]
         SINR, spectrums = [], []
         distanceMatrix, interferenceMatrix = [[]], [[]]
@@ -370,7 +358,7 @@ if __name__ == "__main__":
         # inst = idx + 1
         inst = idx + 1
         count_inst = inst
-        path = "./D10000x10000/U_256/U_256_" + str(inst) + ".txt"
+        path = "./D250x250/U_8/U_8_" + str(inst) + ".txt"
         noise, powerSender, alfa, nConnections = loadData(
             path,
             receivers,

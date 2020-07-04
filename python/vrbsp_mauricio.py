@@ -8,6 +8,7 @@ from gurobipy import GRB
 
 overlap = []
 nChannels = 45
+count_inst = 0
 
 
 def converTableToMW(SINR, SINR_):
@@ -185,7 +186,7 @@ def defineVariables(model, model_type, nConnections, x, y, z, w, I, I_c):
     for i in range(nConnections):
         for c in range(nChannels):
             name = "z[" + str(i) + "][" + str(c) + "]"
-            z[i, c] = model.addVar(0.0, 1.0, 0.0, GRB.BINARY, name)
+            z[i, c] = model.addVar(0.0, GRB.INFINITY, 0.0, GRB.INTEGER, name)
 
     for i in range(nConnections):
         name = "I[" + str(i) + "]"
@@ -334,7 +335,7 @@ def modelF1_v2(
     powerSender,
     noise,
 ):
-    global nChannels
+    global nChannels, count_inst
     try:
         # Create a new model
         model = gp.Model("vrbsp")
@@ -359,36 +360,38 @@ def modelF1_v2(
         )
         defineObjectiveFunction(model, model_type, nConnections, dataRates, y)
 
+        file_name = "out-formatted" + str(count_inst) + ".txt"
         # model.write("./formulation.lp")
         model.setParam(GRB.Param.LogToConsole, False)
+        model.setParam("LogFile", file_name)
         model.optimize()
         with open("objectives_true.txt", "a") as obj_file:
             obj_file.write(str(model.getAttr(GRB.Attr.ObjVal)))
             obj_file.write("\n")
-            # obj_file.write(str(model.getAttr(GRB.Attr.ObjVal)) + " ")
-            # obj_file.write(str(model.getAttr(GRB.Attr.MIPGap)) + "\n")
         # model.write("./solution.sol")
 
         # conn, canal, bw, interference
-        # for i in range(nConnections):
-        #     for b in range(4):
-        #         nMCS = 10 if b != 0 else 9
-        #         for m in range(nMCS):
-        #             if y[i, b, m].getAttr("x") == 1.0:
-        #                 # print(str(i) + " to na " + str(b) + " " + str(m))
-        #                 normal = False
-        #                 for c in range(nChannels):
-        #                     if x[i, c].getAttr("x") == 1.0:
-        #                         normal = True
-        #                         print(
-        #                             "%d %d %d %d %.12lf"
-        #                             % (i, c, b, m, I[i].getAttr("x"))
-        #                         )
-        #                         # print(i, c, b, m, I[i].getAttr("x"))
-        # 
-        #                 if not normal:
-        #                     print("PROBLEMA")
-        #                     exit()
+        with open(file_name, "a") as f:
+            f.write(str(model.getAttr(GRB.Attr.ObjVal)) + "\n")
+            for i in range(nConnections):
+                for b in range(4):
+                    nMCS = 10 if b != 0 else 9
+                    for m in range(nMCS):
+                        if y[i, b, m].getAttr("x") == 1.0:
+                            # print(str(i) + " to na " + str(b) + " " + str(m))
+                            normal = False
+                            for c in range(nChannels):
+                                if x[i, c].getAttr("x") == 1.0:
+                                    normal = True
+                                    f.write(
+                                        "%d %d %d %d %.12f\n"
+                                        % (i, c, b, m, I[i].getAttr("x"))
+                                    )
+                                    # print(i, c, b, m, I[i].getAttr("x"))
+
+                            if not normal:
+                                print("PROBLEMA")
+                                exit()
 
     except gp.GurobiError as e:
         print("Error code " + str(e.errno) + ": " + str(e))
@@ -398,7 +401,7 @@ def modelF1_v2(
 
 
 def loadOverlap():
-    with open("/Users/joaquimnt_/Desktop/temp/overlap.txt", "r") as f:
+    with open("./overlap.txt", "r") as f:
         idx = 0
         for line in f:
             aux = line.split(",")
@@ -412,14 +415,16 @@ def loadOverlap():
 
 if __name__ == "__main__":
     loadOverlap()
-    for idx in range(1):
+    for idx in range(30):
         receivers, senders, dataRates = [[]], [[]], [[]]
         SINR, spectrums = [], []
         distanceMatrix, interferenceMatrix = [[]], [[]]
         M_ij = []
 
         inst = idx + 1
-        path = "./D10000x10000/U_256/U_256_" + str(inst) + ".txt"
+        print(inst)
+        count_inst = inst
+        path = "./D250x250/U_8/U_8_" + str(inst) + ".txt"
         noise, powerSender, alfa, nConnections = loadData(
             path,
             receivers,
