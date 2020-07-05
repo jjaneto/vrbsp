@@ -1,6 +1,4 @@
 #! /usr/bin/env python3
-# TODO: check if the values of distanceMatrix,
-#       interferenceMatrix, and M_ij are set right.
 
 import gurobipy as gp
 import math
@@ -9,6 +7,17 @@ from gurobipy import GRB
 overlap = []
 nChannels = 45
 count_inst = 0
+rst_headers = [
+    "ObjVal",
+    "ObjBoundC",
+    "MIPGap",
+    "NumVars",
+    "NumConstrs",
+    "IterCount",
+    "BarIterCount",
+    "NodeCount",
+    "Runtime",
+]
 
 
 def converTableToMW(SINR, SINR_):
@@ -180,7 +189,7 @@ def defineVariables(model, model_type, nConnections, x, z, w, I, I_c):
     for i in range(nConnections):
         for c in range(nChannels):
             name = "z[" + str(i) + "][" + str(c) + "]"
-            z[i, c] = model.addVar(0.0, GRB.INFINITY, 0.0, GRB.CONTINUOUS, name)
+            z[i, c] = model.addVar(0.0, GRB.INFINITY, 0.0, GRB.INTEGER, name)
 
     for i in range(nConnections):
         name = "I[" + str(i) + "]"
@@ -291,7 +300,7 @@ def modelF1_v2(
     powerSender,
     noise,
 ):
-    global count_inst
+    global nChannels, count_inst, rst_headers
     try:
         # Create a new model
         model = gp.Model("vrbsp")
@@ -311,16 +320,11 @@ def modelF1_v2(
         model.setParam(GRB.Param.LogToConsole, False)
         model.setParam("TimeLimit", 3600)
         model.optimize()
+
         with open("result_information.txt", "a") as output_re:
-            output_re.write(str(model.getAttr("ObjVal")) + " ")
-            output_re.write(str(model.getAttr("ObjBoundC")) + " ")
-            output_re.write(str(model.getAttr("MIPGap")) + " ")
-            output_re.write(str(model.getAttr("NumVars")) + " ")
-            output_re.write(str(model.getAttr("NumConstrs")) + " ")
-            output_re.write(str(model.getAttr("IterCount")) + " ")
-            output_re.write(str(model.getAttr("BarIterCount")) + " ")
-            output_re.write(str(model.getAttr("NodeCount")) + " ")
-            output_re.write(str(model.getAttr("Runtime")))
+            for i in range(len(rst_headers) - 1):
+                output_re.write(str(model.getAttr(rst_headers[i])) + " ")
+            output_re.write(str(model.getAttr(rst_headers[len(rst_headers) - 1])))
             output_re.write("\n")
 
         with open("objectives.txt", "a") as obj_file:
@@ -347,7 +351,7 @@ def modelF1_v2(
 
 
 def loadOverlap():
-    with open("/Users/joaquimnt_/Desktop/temp/overlap.txt", "r") as f:
+    with open("./overlap.txt", "r") as f:
         idx = 0
         for line in f:
             aux = line.split(",")
@@ -361,7 +365,13 @@ def loadOverlap():
 
 if __name__ == "__main__":
     loadOverlap()
-    for idx in range(0, 1):
+
+    with open("result_information.txt", "a") as f:
+        for i in range(len(rst_headers) - 1):
+            f.write(rst_headers[i] + " ")
+        f.write(rst_headers[len(rst_headers) - 1] + "\n")
+
+    for idx in range(3, 5):
         receivers, senders, dataRates = [[]], [[]], [[]]
         SINR, spectrums = [], []
         distanceMatrix, interferenceMatrix = [[]], [[]]
@@ -370,7 +380,11 @@ if __name__ == "__main__":
         # inst = idx + 1
         inst = idx + 1
         count_inst = inst
-        path = "/Users/joaquimnt_/Desktop/temp/D250x250/U_8/U_8_" + str(inst) + ".txt"
+        path = (
+            "./D10000x10000/U_128/U_128_"
+            + str(inst)
+            + ".txt"
+        )
         noise, powerSender, alfa, nConnections = loadData(
             path,
             receivers,
@@ -393,3 +407,4 @@ if __name__ == "__main__":
             powerSender,
             noise,
         )
+ 

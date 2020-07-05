@@ -1,6 +1,4 @@
 #! /usr/bin/env python3
-# TODO: check if the values of distanceMatrix,
-#       interferenceMatrix, and M_ij are set right.
 
 import gurobipy as gp
 import math
@@ -9,6 +7,17 @@ from gurobipy import GRB
 overlap = []
 nChannels = 45
 count_inst = 0
+rst_headers = [
+    "ObjVal",
+    "ObjBoundC",
+    "MIPGap",
+    "NumVars",
+    "NumConstrs",
+    "IterCount",
+    "BarIterCount",
+    "NodeCount",
+    "Runtime",
+]
 
 
 def converTableToMW(SINR, SINR_):
@@ -164,11 +173,6 @@ def loadData(
         )
 
         createBigM(M_ij, nConnections, interferenceMatrix)
-
-    #         for i in range(10):
-    #             for j in range(4):
-    #                 print("%.12f " % (SINR[i][j]), end="")
-    #             print()
 
     return noise, powerSender, alfa, nConnections
 
@@ -340,7 +344,7 @@ def modelF1_v2(
     powerSender,
     noise,
 ):
-    global nChannels, count_inst
+    global nChannels, count_inst, rst_headers
     try:
         # Create a new model
         model = gp.Model("vrbsp")
@@ -371,23 +375,18 @@ def modelF1_v2(
         model.setParam(GRB.Param.LogToConsole, False)
         model.setParam("TimeLimit", 3600)
         model.optimize()
+
         with open("result_information.txt", "a") as output_re:
-            output_re.write(str(model.getAttr("ObjVal")) + " ")
-            output_re.write(str(model.getAttr("ObjBoundC")) + " ")
-            output_re.write(str(model.getAttr("MIPGap")) + " ")
-            output_re.write(str(model.getAttr("NumVars")) + " ")
-            output_re.write(str(model.getAttr("NumConstrs")) + " ")
-            output_re.write(str(model.getAttr("IterCount")) + " ")
-            output_re.write(str(model.getAttr("BarIterCount")) + " ")
-            output_re.write(str(model.getAttr("NodeCount")) + " ")
-            output_re.write(str(model.getAttr("Runtime")))
+            for i in range(len(rst_headers) - 1):
+                output_re.write(str(model.getAttr(rst_headers[i])) + " ")
+            output_re.write(str(model.getAttr(rst_headers[len(rst_headers) - 1])))
             output_re.write("\n")
 
         with open("objectives.txt", "a") as obj_file:
             obj_file.write(str(model.getAttr(GRB.Attr.ObjVal)) + "\n")
         model.write("./solution" + str(count_inst) + ".sol")
 
-        # conn, canal, bw, interference
+        # conn, channel, bw, interference
         with open(file_name, "a") as f:
             f.write(str(model.getAttr(GRB.Attr.ObjVal)) + "\n")
             for i in range(nConnections):
@@ -395,7 +394,6 @@ def modelF1_v2(
                     nMCS = 10 if b != 0 else 9
                     for m in range(nMCS):
                         if y[i, b, m].getAttr("x") == 1.0:
-                            # print(str(i) + " to na " + str(b) + " " + str(m))
                             normal = False
                             for c in range(nChannels):
                                 if x[i, c].getAttr("x") == 1.0:
@@ -404,7 +402,6 @@ def modelF1_v2(
                                         "%d %d %d %d %.12f\n"
                                         % (i, c, b, m, I[i].getAttr("x"))
                                     )
-                                    # print(i, c, b, m, I[i].getAttr("x"))
 
                             if not normal:
                                 print("PROBLEMA")
@@ -432,7 +429,13 @@ def loadOverlap():
 
 if __name__ == "__main__":
     loadOverlap()
-    for idx in range(30):
+
+    with open("result_information.txt", "a") as f:
+        for i in range(len(rst_headers) - 1):
+            f.write(rst_headers[i] + " ")
+        f.write(rst_headers[len(rst_headers) - 1] + "\n")
+
+    for idx in range(3, 5):
         receivers, senders, dataRates = [[]], [[]], [[]]
         SINR, spectrums = [], []
         distanceMatrix, interferenceMatrix = [[]], [[]]
@@ -441,7 +444,7 @@ if __name__ == "__main__":
         inst = idx + 1
         print(inst)
         count_inst = inst
-        path = "./D250x250/U_8/U_8_" + str(inst) + ".txt"
+        path = "./D10000x10000/U_128/U_128_" + str(inst) + ".txt"
         noise, powerSender, alfa, nConnections = loadData(
             path,
             receivers,
