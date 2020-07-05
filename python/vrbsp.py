@@ -306,14 +306,26 @@ def modelF1_v2(
         defineObjectiveFunction(model, model_type, nConnections, dataRates, x)
 
         file_name = "out-formatted" + str(count_inst) + ".txt"
-        # model.write("./formulation.lp")
+        model.write("./formulation" + str(count_inst) + ".lp")
         model.setParam("LogFile", file_name)
         model.setParam(GRB.Param.LogToConsole, False)
         model.setParam("TimeLimit", 3600)
         model.optimize()
+        with open("result_information.txt", "a") as output_re:
+            output_re.write(str(model.getAttr("ObjVal")) + " ")
+            output_re.write(str(model.getAttr("ObjBoundC")) + " ")
+            output_re.write(str(model.getAttr("MIPGap")) + " ")
+            output_re.write(str(model.getAttr("NumVars")) + " ")
+            output_re.write(str(model.getAttr("NumConstrs")) + " ")
+            output_re.write(str(model.getAttr("IterCount")) + " ")
+            output_re.write(str(model.getAttr("BarIterCount")) + " ")
+            output_re.write(str(model.getAttr("NodeCount")) + " ")
+            output_re.write(str(model.getAttr("Runtime")))
+            output_re.write("\n")
+
         with open("objectives.txt", "a") as obj_file:
             obj_file.write(str(model.getAttr(GRB.Attr.ObjVal)) + "\n")
-        # model.write("./solution.sol")
+        model.write("./solution" + str(count_inst) + ".sol")
 
         # conn, canal, bw, interference
         with open(file_name, "a") as f:
@@ -335,7 +347,7 @@ def modelF1_v2(
 
 
 def loadOverlap():
-    with open("./overlap.txt", "r") as f:
+    with open("/Users/joaquimnt_/Desktop/temp/overlap.txt", "r") as f:
         idx = 0
         for line in f:
             aux = line.split(",")
@@ -349,7 +361,7 @@ def loadOverlap():
 
 if __name__ == "__main__":
     loadOverlap()
-    for idx in range(30):
+    for idx in range(0, 1):
         receivers, senders, dataRates = [[]], [[]], [[]]
         SINR, spectrums = [], []
         distanceMatrix, interferenceMatrix = [[]], [[]]
@@ -358,7 +370,7 @@ if __name__ == "__main__":
         # inst = idx + 1
         inst = idx + 1
         count_inst = inst
-        path = "./D250x250/U_8/U_8_" + str(inst) + ".txt"
+        path = "/Users/joaquimnt_/Desktop/temp/D250x250/U_8/U_8_" + str(inst) + ".txt"
         noise, powerSender, alfa, nConnections = loadData(
             path,
             receivers,

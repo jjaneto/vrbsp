@@ -366,16 +366,26 @@ def modelF1_v2(
         defineObjectiveFunction(model, model_type, nConnections, dataRates, y)
 
         file_name = "out-formatted" + str(count_inst) + ".txt"
-        model.write("./formulation.lp")
+        model.write("./formulation" + str(count_inst) + ".lp")
+        model.setParam("LogFile", file_name)
         model.setParam(GRB.Param.LogToConsole, False)
-        # model.setParam("LogFile", file_name)
+        model.setParam("TimeLimit", 3600)
         model.optimize()
-        with open("objectives_true.txt", "a") as obj_file:
-            obj_file.write(str(model.getAttr(GRB.Attr.ObjVal)))
-            obj_file.write("\n")
-            # obj_file.write(str(model.getAttr(GRB.Attr.ObjVal)) + " ")
-            # obj_file.write(str(model.getAttr(GRB.Attr.MIPGap)) + "\n")
-        model.write("./solution.sol")
+        with open("result_information.txt", "a") as output_re:
+            output_re.write(str(model.getAttr("ObjVal")) + " ")
+            output_re.write(str(model.getAttr("ObjBoundC")) + " ")
+            output_re.write(str(model.getAttr("MIPGap")) + " ")
+            output_re.write(str(model.getAttr("NumVars")) + " ")
+            output_re.write(str(model.getAttr("NumConstrs")) + " ")
+            output_re.write(str(model.getAttr("IterCount")) + " ")
+            output_re.write(str(model.getAttr("BarIterCount")) + " ")
+            output_re.write(str(model.getAttr("NodeCount")) + " ")
+            output_re.write(str(model.getAttr("Runtime")))
+            output_re.write("\n")
+
+        with open("objectives.txt", "a") as obj_file:
+            obj_file.write(str(model.getAttr(GRB.Attr.ObjVal)) + "\n")
+        model.write("./solution" + str(count_inst) + ".sol")
 
         # conn, canal, bw, interference
         with open(file_name, "a") as f:
