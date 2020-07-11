@@ -404,7 +404,7 @@ def modelF1_v2(
                                     )
 
                             if not normal:
-                                print("PROBLEMA")
+                                print("PROBLEMA EM " + str(i))
                                 exit()
 
     except gp.GurobiError as e:
@@ -435,7 +435,7 @@ if __name__ == "__main__":
             f.write(rst_headers[i] + " ")
         f.write(rst_headers[len(rst_headers) - 1] + "\n")
 
-    for idx in range(3, 5):
+    for idx in range(1):
         receivers, senders, dataRates = [[]], [[]], [[]]
         SINR, spectrums = [], []
         distanceMatrix, interferenceMatrix = [[]], [[]]
@@ -444,7 +444,7 @@ if __name__ == "__main__":
         inst = idx + 1
         print(inst)
         count_inst = inst
-        path = "./D10000x10000/U_128/U_128_" + str(inst) + ".txt"
+        path = "./D10000x10000/U_64/U_64_" + str(inst) + ".txt"
         noise, powerSender, alfa, nConnections = loadData(
             path,
             receivers,

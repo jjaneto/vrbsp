@@ -2,6 +2,7 @@
 
 import gurobipy as gp
 import math
+import sys
 from gurobipy import GRB
 
 overlap = []
@@ -189,7 +190,7 @@ def defineVariables(model, model_type, nConnections, x, z, w, I, I_c):
     for i in range(nConnections):
         for c in range(nChannels):
             name = "z[" + str(i) + "][" + str(c) + "]"
-            z[i, c] = model.addVar(0.0, GRB.INFINITY, 0.0, GRB.CONTINUOUS, name)
+            z[i, c] = model.addVar(0.0, GRB.INFINITY, 0.0, GRB.INTEGER, name)
 
     for i in range(nConnections):
         name = "I[" + str(i) + "]"
@@ -232,7 +233,7 @@ def defineConstraints(
                     if overlap[c1][c2] == 1:
                         exp += x[i, c2, m]
             model.addConstr(exp == z[i, c1])
-    
+
     # Constraint 3
     for i in range(nConnections):
         for c in range(nChannels):
@@ -241,22 +242,6 @@ def defineConstraints(
                 if i != u:
                     exp += interferenceMatrix[i][u] * z[u, c]
             model.addConstr(I_c[i, c] == exp)
-
-    # # Constraint alfa
-    # for i in range(nConnections):
-    #     for c in range(nChannels):
-    #         expr_ic = gp.LinExpr()
-    #         for u in range(nConnections):
-    #             if i != u:
-    #                 nMCS = 10 if cToB(c) != 0 else 9
-    #                 expr_z = gp.LinExpr()
-    #                 for c2 in range(nChannels):
-    #                     for m in range(nMCS):
-    #                         if overlap[c][c2]:
-    #                             expr_z += x[u, c2, m]
-    #                 expr_ic += interferenceMatrix[i][u] * expr_z
-    # 
-    #         model.addConstr(I_c[i, c] == expr_ic)
 
     # Constraint 4
     for i in range(nConnections):
@@ -267,14 +252,14 @@ def defineConstraints(
                 lin_exp = I_c[i, c] - M_ij[i] * (1 - x[i, c, m])
                 model.addConstr(I[i] >= lin_exp)
 
-    # # Constraint 5
-    # for i in range(nConnections):
-    #     for c in range(nChannels):
-    #         nDataRates = 10 if cToB(c) != 0 else 9
-    #         for m in range(nDataRates):
-    #             lin_exp = gp.LinExpr()
-    #             lin_exp = I_c[i, c] + M_ij[i] * (1 - x[i, c, m])
-    #             model.addConstr(I[i] <= lin_exp)
+    # Constraint 5
+    for i in range(nConnections):
+        for c in range(nChannels):
+            nDataRates = 10 if cToB(c) != 0 else 9
+            for m in range(nDataRates):
+                lin_exp = gp.LinExpr()
+                lin_exp = I_c[i, c] + M_ij[i] * (1 - x[i, c, m])
+                model.addConstr(I[i] <= lin_exp)
 
     # Constraint 6
     for i in range(nConnections):
@@ -331,11 +316,10 @@ def modelF1_v2(
         defineObjectiveFunction(model, model_type, nConnections, dataRates, x)
 
         file_name = "out-formatted" + str(count_inst) + ".txt"
-        # model.write("./formulation" + str(count_inst) + ".lp")
+        model.write("./formulation" + str(count_inst) + ".lp")
         model.setParam("LogFile", file_name)
         model.setParam(GRB.Param.LogToConsole, False)
         model.setParam("TimeLimit", 3600)
-        model.setParam(GRB.Param.IntFeasTol, 1e-9)
         model.optimize()
 
         with open("result_information.txt", "a") as output_re:
@@ -368,7 +352,7 @@ def modelF1_v2(
 
 
 def loadOverlap():
-    with open("./overlap.txt", "r") as f:
+    with open("/Users/joaquimnt_/Desktop/temp/overlap.txt", "r") as f:
         idx = 0
         for line in f:
             aux = line.split(",")
@@ -394,9 +378,10 @@ if __name__ == "__main__":
         distanceMatrix, interferenceMatrix = [[]], [[]]
         M_ij = []
 
+        # inst = idx + 1
         inst = idx + 1
         count_inst = inst
-        path = "./D250x250/U_8/U_8_" + str(inst) + ".txt"
+        path = "/Users/joaquimnt_/Desktop/temp/D250x250/U_8/U_8_" + str(inst) + ".txt"
         noise, powerSender, alfa, nConnections = loadData(
             path,
             receivers,
